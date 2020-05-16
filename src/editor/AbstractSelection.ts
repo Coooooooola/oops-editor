@@ -1,12 +1,12 @@
-import { AbstractNode } from "./AbstractNode";
+import { AbstractNode, AnyAbstractNode } from "./AbstractNode";
 import { assert, findAbstractNodeFromDOM, findAbstractNode, compareAbstractPosition } from "./utils";
-import { AbstractConfigs, IntentType, SelectionSynchronizePayload, AbstractPosition, SelectionRenderingPayload } from "./types";
+import { AbstractConfigs, AbstractEventType, SelectionSynchronizePayload, AbstractPosition, SelectionRenderingPayload } from "./types";
 import { AbstractHelper } from "./AbstractHelper";
-import { AbstractIntentTrace } from "./AbstractIntent";
+import { AbstractIntentTrace } from "./AbstractEvent";
 
 export class AbstractPoint {
   constructor(
-    public readonly node: AbstractNode,
+    public readonly node: AnyAbstractNode,
     public readonly offset: number,
   ) {}
 
@@ -37,10 +37,10 @@ export class AbstractRange {
 }
 
 export class AbstractSelection {
-  private range: AbstractRange | null = null;
+  range: AbstractRange | null = null;
   private helper: AbstractHelper;
 
-  constructor(root: AbstractNode, private configs: AbstractConfigs) {
+  constructor(root: AnyAbstractNode, private configs: AbstractConfigs) {
     this.helper = new AbstractHelper(root);
   }
 
@@ -55,24 +55,24 @@ export class AbstractSelection {
     }
     const { anchor, focus, isForward, collapsed } = range;
     const type = shift
-      ? (forward ? IntentType.SelectionExtendForward : IntentType.SelectionExtendBackward)
-      : (forward ? IntentType.SelectionForward : IntentType.SelectionBackward);
-    const newRange = helper.showIntention<AbstractRange, any>({ type, payload: { range, step } }, {
+      ? (forward ? AbstractEventType.SelectionExtendForward : AbstractEventType.SelectionExtendBackward)
+      : (forward ? AbstractEventType.SelectionForward : AbstractEventType.SelectionBackward);
+    const newRange = helper.dispatchEvent<AbstractRange, any>({ type, payload: { range, step } }, {
       forward,
       configs,
-      pointScope: {
-        point1: anchor.node,
-        point2: focus.node,
-      }
+      point1: anchor.node,
+      point2: focus.node,
     }) || null;
     return this.updateRange(newRange);
   }
 
-  forward(shift: boolean, step = 1) {
+  forward(shift: boolean, step: number, event: KeyboardEvent) {
+    event.preventDefault();
     return this.moveSelection(shift, true, step);
   }
 
-  backward(shift: boolean, step = 1) {
+  backward(shift: boolean, step: number, event: KeyboardEvent) {
+    event.preventDefault();
     return this.moveSelection(shift, false, step);
   }
 
@@ -94,16 +94,14 @@ export class AbstractSelection {
   renderWindowSelection(windowSelection: Selection) {
     if (this.range) {
       const { anchor, focus, isForward } = this.range;
-      const selection = this.helper.showIntention<AbstractIntentTrace['windowSelection'], SelectionRenderingPayload>({
-        type: IntentType.SelectionRendering,
+      const selection = this.helper.dispatchEvent<AbstractIntentTrace['windowSelection'], SelectionRenderingPayload>({
+        type: AbstractEventType.SelectionRendering,
         payload: { range: this.range },
       }, {
         forward: isForward,
         configs: this.configs,
-        pointScope: {
-          point1: anchor.node,
-          point2: focus.node,
-        },
+        point1: anchor.node,
+        point2: focus.node,
       });
 
       if (selection) {
@@ -172,8 +170,8 @@ export class AbstractSelection {
         throw new Error();
     }
 
-    const newRange = this.helper.showIntention<AbstractRange, SelectionSynchronizePayload>({
-      type: IntentType.SelectionSynchronize,
+    const newRange = this.helper.dispatchEvent<AbstractRange, SelectionSynchronizePayload>({
+      type: AbstractEventType.SelectionSynchronize,
       payload: {
         range: this.range,
         isCollapsed,
@@ -187,10 +185,8 @@ export class AbstractSelection {
     }, {
       forward,
       configs: this.configs,
-      pointScope: {
-        point1: anchorAbstractNode,
-        point2: focusAbstractNode,
-      },
+      point1: anchorAbstractNode,
+      point2: focusAbstractNode,
     }) || null;
     this.updateRange(newRange, windowSelection);
   }

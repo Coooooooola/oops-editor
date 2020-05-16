@@ -1,6 +1,6 @@
 import React, { useMemo, createContext } from "react";
 import { DocType, DocConfigs } from "../types";
-import { AbstractNode } from "../AbstractNode";
+import { AbstractNode, AnyAbstractNode } from "../AbstractNode";
 
 interface DocumentContext {
   configs: DocConfigs;
@@ -23,7 +23,7 @@ export const documentContext = createContext<DocumentContext>({
 });
 
 interface DocumentProps {
-  root: AbstractNode;
+  root: AnyAbstractNode;
   configs: DocConfigs;
 }
 

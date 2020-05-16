@@ -1,34 +1,23 @@
 import React, { useMemo } from 'react';
 import { UserIntention } from './IntentSystem';
-import { IDoc, EditorConfigs } from './types';
-import { AbstractNode } from './AbstractNode';
-import { defaultDoc, defaultEditorConfigs } from './defaultConfigs';
+import { EditorConfigs, DocType } from './types';
+import { AbstractNode, AnyAbstractNode } from './AbstractNode';
+import { defaultEditorConfigs, defaultAbstractNode } from './defaultConfigs';
 import { DocDocument } from './docs/DocDocument';
 
 interface EditorProps {
-  doc?: IDoc;
-  abstractNode?: AbstractNode;
+  abstractNode?: AnyAbstractNode;
   configs?: EditorConfigs;
 }
 
 export function Editor({
-  doc = defaultDoc,
-  abstractNode: _abstractNode,
+  abstractNode = defaultAbstractNode,
   configs = defaultEditorConfigs,
 }: EditorProps) {
-  const abstractNode = useMemo(
-    () => _abstractNode || new AbstractNode(doc, null),
-    [_abstractNode, doc],
-  );
+  (window as any).root = abstractNode;
   return (
-    <UserIntention
-      root={abstractNode}
-      configs={configs}
-    >
-      <DocDocument
-        root={abstractNode}
-        configs={configs}
-      />
+    <UserIntention root={abstractNode} configs={configs}>
+      <DocDocument root={abstractNode} configs={configs} />
     </UserIntention>
   );
 }

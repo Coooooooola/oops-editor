@@ -1,70 +1,79 @@
 import React, { useMemo } from 'react';
 import { AbstractNode } from "../AbstractNode";
-import { IDocText, IntentType, SelectionSynchronizePayload, SelectionRenderingPayload } from "../types";
-import { useAbstractNodeData, useConnectAbstractNode, useOnIntent } from "./hooks";
-import { AbstractIntent } from '../AbstractIntent';
+import { AbstractEventType, Reference, SelectionSynchronizePayload, SelectionRenderingPayload, DocType, AbstractText } from "../types";
+import { useAbstractNodeData, useConnectAbstractNode, useOnViewHook } from "./hooks";
+import { AbstractEvent } from '../AbstractEvent';
 import { AbstractPoint } from '../AbstractSelection';
 
-function useTextOnIntent(node: AbstractNode, ref: React.RefObject<HTMLSpanElement>) {
-  const onIntent = useMemo(() => {
-    function textSyncSelection(intent: AbstractIntent<SelectionSynchronizePayload, AbstractRange>) {
-      const { payload } = intent;
-      if (payload.anchorAbstractNode === node || payload.focusAbstractNode === node) {
-        const textNode = ref.current?.firstChild;
-        if (textNode) {
-          const trace = intent.trace.selection || { anchorPoint: undefined, focusPoint: undefined };
-          intent.trace.selection = trace;
-          if (payload.anchorNode === textNode) {
-            trace.anchorPoint = new AbstractPoint(node, payload.anchorOffset);
-          }
-          if (payload.focusNode === textNode) {
-            trace.focusPoint = new AbstractPoint(node, payload.focusOffset);
-          }
-        }
+function textSyncSelection(
+  node: AbstractText,
+  event: AbstractEvent<SelectionSynchronizePayload, AbstractRange>,
+  ref: Reference<HTMLSpanElement, null>,
+) {
+  const { payload } = event;
+  if (payload.anchorAbstractNode === node || payload.focusAbstractNode === node) {
+    const textNode = ref.current?.firstChild;
+    if (textNode) {
+      const trace = event.trace.selection || { anchorPoint: undefined, focusPoint: undefined };
+      event.trace.selection = trace;
+      if (payload.anchorNode === textNode) {
+        trace.anchorPoint = new AbstractPoint(node, payload.anchorOffset);
+      }
+      if (payload.focusNode === textNode) {
+        trace.focusPoint = new AbstractPoint(node, payload.focusOffset);
       }
     }
-
-    function textRenderSelection(intent: AbstractIntent<SelectionRenderingPayload, Range>) {
-      const { payload } = intent;
-      if (payload.range.anchor.node === node || payload.range.focus.node === node) {
-        const textNode = ref.current?.firstChild;
-        if (textNode) {
-          const trace = intent.trace.windowSelection || {
-            anchorNode: undefined,
-            anchorOffset: undefined,
-            focusNode: undefined,
-            focusOffset: undefined,
-          };
-          intent.trace.windowSelection = trace;
-          if (payload.range.anchor.node === node) {
-            trace.anchorNode = textNode;
-            trace.anchorOffset = payload.range.anchor.offset;
-          }
-          if (payload.range.focus.node === node) {
-            trace.focusNode = textNode;
-            trace.focusOffset = payload.range.focus.offset;
-          }
-        }
-      }
-    }
-
-    return function textOnIntent(intent: AbstractIntent, originEvent: Event) {
-      switch (intent.type) {
-        case IntentType.SelectionSynchronize:
-          return textSyncSelection(intent);
-        case IntentType.SelectionRendering:
-          return textRenderSelection(intent);
-      }
-    };
-  }, [node, ref]);
-
-  useOnIntent(node, onIntent);
+  }
 }
 
-export function TextView({ context }: { context: AbstractNode<IDocText> }) {
+function textRenderSelection(
+  node: AbstractText,
+  event: AbstractEvent<SelectionRenderingPayload, Range>,
+  ref: Reference<HTMLSpanElement, null>,
+) {
+  const { payload } = event;
+  if (payload.range.anchor.node === node || payload.range.focus.node === node) {
+    const textNode = ref.current?.firstChild;
+    if (textNode) {
+      const trace = event.trace.windowSelection || {
+        anchorNode: undefined,
+        anchorOffset: undefined,
+        focusNode: undefined,
+        focusOffset: undefined,
+      };
+      event.trace.windowSelection = trace;
+      if (payload.range.anchor.node === node) {
+        trace.anchorNode = textNode;
+        trace.anchorOffset = payload.range.anchor.offset;
+      }
+      if (payload.range.focus.node === node) {
+        trace.focusNode = textNode;
+        trace.focusOffset = payload.range.focus.offset;
+      }
+    }
+  }
+}
+
+function createViewHook(ref: Reference<HTMLSpanElement, null>) {
+  return function onViewHook(this: AbstractText, event: AbstractEvent, originEvent?: Event) {
+    switch (event.type) {
+      case AbstractEventType.SelectionSynchronize:
+        return textSyncSelection(this, event, ref);
+      case AbstractEventType.SelectionRendering:
+        return textRenderSelection(this, event, ref);
+    }
+  }
+}
+
+function useTextOnViewHook(node: AbstractText, ref: React.RefObject<HTMLSpanElement>) {
+  const onViewHook = useMemo(() => createViewHook(ref), [ref]);
+  useOnViewHook(node, onViewHook);
+}
+
+export function TextView({ context }: { context: AbstractText }) {
   const { content, style } = useAbstractNodeData(context);
   const ref = useConnectAbstractNode<HTMLSpanElement>(context);
-  useTextOnIntent(context, ref);
+  useTextOnViewHook(context, ref);
   return (
     <span ref={ref} style={style}>
       {content}
@@ -72,12 +81,24 @@ export function TextView({ context }: { context: AbstractNode<IDocText> }) {
   );
 }
 
-export function textOnIntent(node: AbstractNode, intent: AbstractIntent) {
-  switch (intent.type) {
+
+
+function textMoveSelection(
+  node: AbstractText,
+  event: AbstractEvent<SelectionRenderingPayload, Range, React.KeyboardEvent>,
+) {
+  console.log(event);
+}
+
+export function textOnHook(this: AbstractText, event: AbstractEvent) {
+  switch (event.type) {
+    case AbstractEventType.SelectionBackward:
+    case AbstractEventType.SelectionForward:
+      return textMoveSelection(this, event);
   }
 }
 
 export const TextConfig = {
   View: TextView,
-  onIntent: textOnIntent,
+  onHook: textOnHook,
 };

@@ -1,9 +1,9 @@
 import React, { useContext, useMemo, useState } from 'react';
-import { AbstractNode } from './AbstractNode';
+import { AbstractNode, AnyAbstractNode } from './AbstractNode';
 import { documentContext } from './docs/DocDocument';
-import { IDocList } from './types';
+import { DocType, AbstractList } from './types';
 
-function useNextDocViews(context: AbstractNode) {
+function useNextDocViews(context: AnyAbstractNode) {
   const { configs: docConfigs } = useContext(documentContext);
   const [nodes, setNodes] = useState(context.abstractNodes);
   context.renderAbstractNodes = setNodes;
@@ -18,7 +18,7 @@ function useNextDocViews(context: AbstractNode) {
   }, [nodes, docConfigs]);
 }
 
-export function ListView({ context }: { context: AbstractNode<IDocList> }) {
+export function ListView({ context }: { context: AbstractList }) {
   const views = useNextDocViews(context);
   return <div>{views}</div>;
 }

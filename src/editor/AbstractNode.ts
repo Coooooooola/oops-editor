@@ -1,125 +1,179 @@
-import { IDocNode, DocType, CaptureCallback, BubbleCallback } from "./types";
+import { DocType, CaptureCallback, BubbleCallback, Writable, NonEmptyArray } from "./types";
 import { isPartialShallowEqual, assert, getAbstractNodePath } from "./utils";
-import { AbstractIntent } from "./AbstractIntent";
 import { AbstractEvent } from "./AbstractEvent";
+import { AbstractBaseEvent } from "./AbstractBaseEvent";
 
-export type AbstractData<T extends IDocNode> = Omit<T, 'type' | 'id' | 'childNodes'>;
+export type AnyAbstractNode<K extends DocType = DocType, T extends { [key: string]: any } = any> = AbstractNode<K, T>;
 
-export class AbstractNode<T extends IDocNode = any> {
-  readonly type: DocType;
+export interface AbstractNode<
+  K extends DocType,
+  T extends { [key: string]: any } | undefined = any,
+  P extends NonEmptyArray<AnyAbstractNode> | undefined = NonEmptyArray<AnyAbstractNode> | undefined
+> {
+  readonly type: K;
   readonly id: string;
 
-  // render view
-  data: AbstractData<T>;
-  render?(data: AbstractData<T>): void;
-  // render children
-  abstractNodes?: AbstractNode[];
-  renderAbstractNodes?(abstractNodes?: AbstractNode[]): void;
+  readonly data: T;
+  readonly abstractNodes: P;
 
-  // intent hook
-  onViewIntent?(abstractIntent: AbstractIntent, originEvent?: Event): void | BubbleCallback;
+  readonly parent?: AnyAbstractNode;
 
-  constructor(
-    { type, id, childNodes, ...rest }: IDocNode,
-    public parent: AbstractNode | null,
-  ) {
-    this.type = type;
-    this.id = id;
-    this.data = rest as any;
-    this.abstractNodes = childNodes?.map(node => new AbstractNode(node, this));
-  }
+  render?(data: T): void;
+  renderAbstractNodes?(abstractNodes: P): void;
 
-  update(partialData: Partial<AbstractData<T>>) {
-    if (isPartialShallowEqual(partialData, this.data)) {
-      return;
+  onViewHook?(this: AbstractNode<K>, abstractEvent: AbstractEvent): void;
+}
+
+// export function abstract<
+//   T extends AnyAbstractNode,
+// >(
+//   type: T['type'],
+//   id: string,
+//   data: T['data'],
+//   abstractNodes: T['abstractNodes'],
+//   parent?: AnyAbstractNode,
+//   render?: (data: T['data']) => void,
+//   renderAbstractNodes?: (children: T['abstractNodes']) => void,
+//   onViewHook?: (this: AbstractNode<T['type'], T>, abstractEvent: AbstractEvent, originEvent?: Event) => void,
+// ): T {
+//   return {
+//     type,
+//     id,
+//     data,
+//     abstractNodes,
+//     parent,
+//     render,
+//     renderAbstractNodes,
+//     onViewHook,
+//   } as T;
+// }
+
+export function abstractUpdate<T extends DocType>(writableNode: Writable<AbstractNode<T>>, partialData: Partial<T>) {
+  if (!isPartialShallowEqual(partialData, writableNode.data)) {
+    writableNode.data = Object.assign({}, writableNode.data, partialData);
+    if (writableNode.render) {
+      writableNode.render(writableNode.data);
     }
-    this.data = Object.assign({}, this.data, partialData);
-    if (this.render) {
-      this.render(this.data);
-    }
-  }
-
-  concat(...items: AbstractNode[]): AbstractNode[] {
-    if (items.length) {
-      this.abstractNodes = this.abstractNodes ? this.abstractNodes.concat(...items) : items;
-      if (this.renderAbstractNodes) {
-        this.renderAbstractNodes(this.abstractNodes);
-      }
-    }
-    return this.abstractNodes || [];
-  }
-
-  indexOf(searchElement: AbstractNode): number {
-    return this.abstractNodes ? this.abstractNodes.indexOf(searchElement) : -1;
-  }
-
-  splice(start: number, deleteCount?: number): AbstractNode[];
-  splice(start: number, deleteCount: number, ...items: AbstractNode[]): AbstractNode[];
-  splice(start: number, deleteCount?: number, ...items: AbstractNode[]): AbstractNode[] {
-    assert(this.abstractNodes);
-    let ret: AbstractNode[];
-    this.abstractNodes = this.abstractNodes.slice();
-    if (deleteCount == null) {
-      ret = this.abstractNodes.splice(start);
-    } else {
-      ret = this.abstractNodes.splice(start, deleteCount, ...items);
-    }
-
-    if (this.renderAbstractNodes) {
-      this.renderAbstractNodes(this.abstractNodes);
-    }
-    return ret;
-  }
-
-  /**
-   * [   a   b   c   d   e   ]
-   * 
-   * ### example 1
-   * replace: [a] -> [X]
-   * replace([X], a, a)
-   * 
-   * ### example 2
-   * replace: [b, c, d] -> [X1, X2]
-   * replace([X1, X2], b, d)
-   * 
-   * ### example 2
-   * replace: [b, c, d, e] -> [X1, X2]
-   * replace([X1, X2], b, e)
-   */
-  replace(candidates: AbstractNode[], from: AbstractNode, to: AbstractNode): AbstractNode[] {
-    assert(this.abstractNodes);
-    let fromIndex = this.abstractNodes.indexOf(from);
-    let toIndex = from === to ? fromIndex : this.abstractNodes.indexOf(to);
-
-    if (toIndex < fromIndex) {
-      [fromIndex, toIndex] = [toIndex, fromIndex];
-    }
-    assert(fromIndex !== -1 && toIndex !== -1);
-
-    const copy = this.abstractNodes.slice();
-    const ret = copy.splice(fromIndex, toIndex - fromIndex + 1, ...candidates);
-
-    this.abstractNodes = copy.length ? copy : undefined;
-    if (this.renderAbstractNodes) {
-      this.renderAbstractNodes(this.abstractNodes);
-    }
-    return ret;
-  }
-
-  detach() {
-    assert(this.parent);
-    this.parent.replace([], this, this);
   }
 }
 
-export function traverseAbstractNodesRecursively<T extends AbstractEvent>(
+// export type AbstractData<T extends IDocNode> = Omit<T, 'type' | 'id' | 'childNodes'>;
+
+// export class AbstractNode<T extends IDocNode = any> {
+//   readonly type: DocType;
+//   readonly id: string;
+
+//   // render view
+//   data: AbstractData<T>;
+//   render?(data: AbstractData<T>): void;
+//   // render children
+//   abstractNodes?: AbstractNode[];
+//   renderAbstractNodes?(abstractNodes?: AbstractNode[]): void;
+
+//   // intent hook
+//   onViewIntent?(abstractIntent: AbstractIntent, originEvent?: Event): void | BubbleCallback;
+
+//   constructor(
+//     { type, id, childNodes, ...rest }: IDocNode,
+//     public parent: AbstractNode | null,
+//   ) {
+//     this.type = type;
+//     this.id = id;
+//     this.data = rest as any;
+//     this.abstractNodes = childNodes?.map(node => new AbstractNode(node, this));
+//   }
+
+//   update(partialData: Partial<AbstractData<T>>) {
+//     if (isPartialShallowEqual(partialData, this.data)) {
+//       return;
+//     }
+//     this.data = Object.assign({}, this.data, partialData);
+//     if (this.render) {
+//       this.render(this.data);
+//     }
+//   }
+
+//   concat(...items: AbstractNode[]): AbstractNode[] {
+//     if (items.length) {
+//       this.abstractNodes = this.abstractNodes ? this.abstractNodes.concat(...items) : items;
+//       if (this.renderAbstractNodes) {
+//         this.renderAbstractNodes(this.abstractNodes);
+//       }
+//     }
+//     return this.abstractNodes || [];
+//   }
+
+//   indexOf(searchElement: AbstractNode): number {
+//     return this.abstractNodes ? this.abstractNodes.indexOf(searchElement) : -1;
+//   }
+
+//   splice(start: number, deleteCount?: number): AbstractNode[];
+//   splice(start: number, deleteCount: number, ...items: AbstractNode[]): AbstractNode[];
+//   splice(start: number, deleteCount?: number, ...items: AbstractNode[]): AbstractNode[] {
+//     assert(this.abstractNodes);
+//     let ret: AbstractNode[];
+//     this.abstractNodes = this.abstractNodes.slice();
+//     if (deleteCount == null) {
+//       ret = this.abstractNodes.splice(start);
+//     } else {
+//       ret = this.abstractNodes.splice(start, deleteCount, ...items);
+//     }
+
+//     if (this.renderAbstractNodes) {
+//       this.renderAbstractNodes(this.abstractNodes);
+//     }
+//     return ret;
+//   }
+
+//   /**
+//    * [   a   b   c   d   e   ]
+//    * 
+//    * ### example 1
+//    * replace: [a] -> [X]
+//    * replace([X], a, a)
+//    * 
+//    * ### example 2
+//    * replace: [b, c, d] -> [X1, X2]
+//    * replace([X1, X2], b, d)
+//    * 
+//    * ### example 2
+//    * replace: [b, c, d, e] -> [X1, X2]
+//    * replace([X1, X2], b, e)
+//    */
+//   replace(candidates: AbstractNode[], from: AbstractNode, to: AbstractNode): AbstractNode[] {
+//     assert(this.abstractNodes);
+//     let fromIndex = this.abstractNodes.indexOf(from);
+//     let toIndex = from === to ? fromIndex : this.abstractNodes.indexOf(to);
+
+//     if (toIndex < fromIndex) {
+//       [fromIndex, toIndex] = [toIndex, fromIndex];
+//     }
+//     assert(fromIndex !== -1 && toIndex !== -1);
+
+//     const copy = this.abstractNodes.slice();
+//     const ret = copy.splice(fromIndex, toIndex - fromIndex + 1, ...candidates);
+
+//     this.abstractNodes = copy.length ? copy : undefined;
+//     if (this.renderAbstractNodes) {
+//       this.renderAbstractNodes(this.abstractNodes);
+//     }
+//     return ret;
+//   }
+
+//   detach() {
+//     assert(this.parent);
+//     this.parent.replace([], this, this);
+//   }
+// }
+
+export function traverseAbstractNodesRecursively<T extends AbstractBaseEvent>(
   captureCallback: CaptureCallback<T>,
   event: T,
-  node: AbstractNode,
+  node: AnyAbstractNode,
   forward: boolean,
   depth: number,
-  boundary1?: AbstractNode[],
-  boundary2?: AbstractNode[],
+  boundary1?: AnyAbstractNode[],
+  boundary2?: AnyAbstractNode[],
 ) {
   event.depth = depth;
   const currentIndex = event.index;
@@ -184,12 +238,12 @@ export function traverseAbstractNodesRecursively<T extends AbstractEvent>(
   event.propagating = true;
 }
 
-export function traverseAbstractNodes<T extends AbstractEvent = AbstractEvent>(
+export function traverseAbstractNodes<T extends AbstractBaseEvent = AbstractBaseEvent>(
   captureCallback: CaptureCallback<T>,
-  origin: AbstractNode,
+  origin: AnyAbstractNode,
   event: T,
-  arg1?: AbstractNode[] | AbstractNode,
-  arg2?: AbstractNode[] | AbstractNode,
+  arg1?: AnyAbstractNode[] | AnyAbstractNode,
+  arg2?: AnyAbstractNode[] | AnyAbstractNode,
 ) {
   const boundary1 = Array.isArray(arg1) ? arg1 : arg1 && getAbstractNodePath(arg1, origin);
   const boundary2 = Array.isArray(arg2) ? arg2 : (

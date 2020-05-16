@@ -1,4 +1,4 @@
-import { AbstractNode } from "./AbstractNode";
+import { AbstractNode, AnyAbstractNode } from "./AbstractNode";
 import { AbstractPosition } from "./types";
 
 export function randomId() {
@@ -22,7 +22,7 @@ export function findTargetFromDOM<T>(node: Node, finder: TargetFinder<T>) {
 export function findAbstractNodeFromDOM(node: Node) {
   return findTargetFromDOM(
     node,
-    node => '__ABSTRACT__' in node ? (node as any).__ABSTRACT__ as AbstractNode : undefined,
+    node => '__ABSTRACT__' in node ? (node as any).__ABSTRACT__ as AnyAbstractNode : undefined,
   );
 }
 
@@ -32,8 +32,8 @@ export function assert(condition: any, msg?: string): asserts condition {
   }
 }
 
-export function findAbstractNode(node: AbstractNode, target: AbstractNode) {
-  let p: AbstractNode | null = node;
+export function findAbstractNode(node: AnyAbstractNode, target: AnyAbstractNode) {
+  let p: AnyAbstractNode | undefined = node;
   while (p) {
     if (p === target) {
       return target;
@@ -76,9 +76,9 @@ export function isPartialShallowEqual(partial: any, origin: any, all = false): b
 }
 
   
-export function getAbstractNodePath(from: AbstractNode, to?: AbstractNode) {
-  const path: AbstractNode[] = [];
-  let p: AbstractNode | null = from;
+export function getAbstractNodePath(from: AnyAbstractNode, to?: AnyAbstractNode) {
+  const path: AnyAbstractNode[] = [];
+  let p: AnyAbstractNode | undefined = from;
   while (p) {
     path.push(p);
     if (p === to) {
@@ -89,7 +89,7 @@ export function getAbstractNodePath(from: AbstractNode, to?: AbstractNode) {
   return path.reverse();
 }
 
-export function compareAbstractPosition(node1: AbstractNode, node2: AbstractNode): AbstractPosition {
+export function compareAbstractPosition(node1: AnyAbstractNode, node2: AnyAbstractNode): AbstractPosition {
   if (node1 === node2) {
     return AbstractPosition.Same;
   }

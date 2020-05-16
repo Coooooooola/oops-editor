@@ -1,8 +1,8 @@
-import { Intent, DocType, AbstractConfigs } from "./types";
-import { AbstractNode, traverseAbstractNodes } from "./AbstractNode";
-import { AbstractEvent } from './AbstractEvent';
+import { RawAbstractEvent, DocType, AbstractConfigs } from "./types";
+import { AnyAbstractNode, traverseAbstractNodes } from "./AbstractNode";
+import { AbstractBaseEvent } from './AbstractBaseEvent';
 import { assert } from "./utils";
-import { AbstractIntent } from "./AbstractIntent";
+import { AbstractEvent } from "./AbstractEvent";
 
 export enum SelectorResult {
   Bail = -1,
@@ -10,14 +10,14 @@ export enum SelectorResult {
   Succuss = 1,
 }
 
-type AbstractSelector = (node: AbstractNode) => SelectorResult;
+type AbstractSelector = (node: AnyAbstractNode) => SelectorResult;
 
 function alwaySuccessSelector() {
   return SelectorResult.Succuss;
 }
 
 function docTypeSelector(...docTypes: DocType[]) {
-  return function selector(node: AbstractNode) {
+  return function selector(node: AnyAbstractNode) {
     if (docTypes.some(docType => docType === node.type)) {
       return SelectorResult.Succuss;
     }
@@ -36,12 +36,12 @@ function transformToSelector(arg0?: AbstractSelector | DocType, ...args: DocType
 }
 
 function findAbstractNode(
-  node: AbstractNode,
+  node: AnyAbstractNode,
   selector: AbstractSelector,
   forward: boolean,
-): { node: AbstractNode, index: number } | null {
-  let ret: { node: AbstractNode, index: number } | null = null;
-  function captureCallback(node: AbstractNode, event: AbstractEvent) {
+): { node: AnyAbstractNode, index: number } | null {
+  let ret: { node: AnyAbstractNode, index: number } | null = null;
+  function captureCallback(node: AnyAbstractNode, event: AbstractBaseEvent) {
     switch (selector(node)) {
       case SelectorResult.Succuss:
         ret = { node, index: event.index };
@@ -49,36 +49,29 @@ function findAbstractNode(
         event.bail();
     }
   }
-  traverseAbstractNodes(captureCallback, node, new AbstractEvent(forward));
+  traverseAbstractNodes(captureCallback, node, new AbstractBaseEvent(forward));
   return ret;
 }
 
-// function iterateAbstractNode(node: AbstractNode, start: number, forward: boolean) {
+// function iterateAbstractNode(node: AnyAbstractNode, start: number, forward: boolean) {
 // }
-
-interface BoundaryScope {
-  boundary1: AbstractNode[];
-  boundary2: AbstractNode[];
-}
-
-interface PointScope {
-  point1: AbstractNode;
-  point2: AbstractNode;
-}
 
 export interface IntentDetails {
   forward: boolean;
-  boundaryScope?: BoundaryScope,
-  pointScope?: PointScope,
   configs: AbstractConfigs;
-  originEvent?: Event;
+  originEvent?: any;
+
+  point1?: AnyAbstractNode;
+  point2?: AnyAbstractNode;
+  boundary1?: AnyAbstractNode[];
+  boundary2?: AnyAbstractNode[];
 }
 
 export class AbstractHelper {
-  private _parent: AbstractNode | null = null;
+  private _parent: AnyAbstractNode | null = null;
 
   constructor(
-    readonly current: AbstractNode | null,
+    readonly current: AnyAbstractNode | null,
     private index: number = -1,
   ) {
     const _parent = current?.parent || null;
@@ -116,33 +109,24 @@ export class AbstractHelper {
     return selector;
   }
 
-  showIntention<T, P>(
-    intent: Intent<P>,
-    { forward, boundaryScope, pointScope, configs, originEvent }: IntentDetails,
+  dispatchEvent<T, P>(
+    rawEvent: RawAbstractEvent<P>,
+    { forward, point1, point2, boundary1, boundary2, configs, originEvent }: IntentDetails,
   ): T | undefined {
     const { current } = this;
     if (!current) {
       return undefined;
     }
 
-    const abstractIntent = new AbstractIntent<P, T>(intent, forward);
-    function captureCallback(node: AbstractNode, abstractIntent: AbstractIntent) {
-      configs[node.type].onIntent(node, abstractIntent);
-      if (node.onViewIntent) {
-        return node.onViewIntent(abstractIntent, originEvent);
+    const abstractIntent = new AbstractEvent<P, T>(rawEvent, forward, originEvent);
+    function captureCallback(node: AnyAbstractNode, event: AbstractEvent) {
+      (configs[node.type].onHook as any).call(node, event);
+      if (node.onViewHook) {
+        return node.onViewHook(event);
       }
     }
 
-    let arg1;
-    let arg2;
-    if (boundaryScope) {
-      arg1 = boundaryScope.boundary1;
-      arg2 = boundaryScope.boundary2;
-    } else if (pointScope) {
-      arg1 = pointScope.point1;
-      arg2 = pointScope.point2;
-    }
-    traverseAbstractNodes(captureCallback, current, abstractIntent, arg1, arg2);
+    traverseAbstractNodes(captureCallback, current, abstractIntent, boundary1 || point1, boundary2 || point2);
     return abstractIntent.returnValue;
   }
 
@@ -158,7 +142,7 @@ export class AbstractHelper {
       return this;
     }
     const selector = this.prepare(true, arg0, ...args);
-    let p: AbstractNode | null = this.current.parent;
+    let p: AnyAbstractNode | undefined = this.current.parent;
     let ret = emptyAbstractHelper;
     while (p) {
       if (selector(p)) {
@@ -293,6 +277,8 @@ export class AbstractHelper {
 
 const emptyAbstractHelper = new AbstractHelper(null);
 
-export function $(abstractNode: AbstractNode | null, index?: number) {
+export function $(abstractNode: AnyAbstractNode | null, index?: number) {
   return new AbstractHelper(abstractNode, index);
 }
+
+(window as any).$ = $;

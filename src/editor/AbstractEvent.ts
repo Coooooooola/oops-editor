@@ -1,28 +1,34 @@
-import { AbstractNode } from "./AbstractNode";
+import { AbstractEventType, DocType, RawAbstractEvent } from "./types";
+import { AbstractBaseEvent } from "./AbstractBaseEvent";
+import { AbstractPoint } from "./AbstractSelection";
 
-export class AbstractEvent<T = any, R = any> {
-  propagating = true;
-  bailed = false;
-  depth = -1;
-  /**
-   * -2: lazy calculate
-   * -1: no parent
-   * >= 0: index in parent.abstractNodes
-   */
-  index = -2;
-  boundary1?: AbstractNode[];
-  boundary2?: AbstractNode[];
+export type AbstractIntentTrace = {
+  [docType in DocType]?: object;
+} & {
+  selection?: {
+    anchorPoint?: AbstractPoint,
+    focusPoint?: AbstractPoint,
+  },
+  windowSelection?: {
+    anchorNode?: Node,
+    anchorOffset?: number,
+    focusNode?: Node,
+    focusOffset?: number,
+  },
+};
 
-  trace?: T;
-  returnValue?: R;
+export class AbstractEvent<T = any, R = any, U = any> extends AbstractBaseEvent<any, R, U> {
+  type: AbstractEventType;
+  payload: T;
+  trace: AbstractIntentTrace = {};
 
-  constructor(public readonly forward: boolean) {}
-
-  stopPropagation() {
-    this.propagating = false;
+  constructor(rawEvent: RawAbstractEvent, forward: boolean, originEvent?: U) {
+    super(forward, originEvent);
+    this.type = rawEvent.type;
+    this.payload = rawEvent.payload;
   }
 
-  bail() {
-    this.bailed = true;
+  writeValue(subValue: Partial<AbstractIntentTrace>) {
+    this.trace = Object.assign({}, this.trace, subValue);
   }
 }

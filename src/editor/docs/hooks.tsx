@@ -1,9 +1,9 @@
 import React, { useRef, useEffect, useContext, useState, useMemo } from 'react';
-import { AbstractNode } from '../AbstractNode';
+import { AbstractNode, AnyAbstractNode } from '../AbstractNode';
 import { documentContext } from './DocDocument';
-import { IDocNode } from '../types';
+import { DocType } from '../types';
 
-export function useConnectAbstractNode<T extends Element>(abstractNode: AbstractNode) {
+export function useConnectAbstractNode<T extends Element>(abstractNode: AnyAbstractNode) {
   const ref = useRef<T>(null);
   useEffect(() => {
     if (ref.current) {
@@ -13,28 +13,28 @@ export function useConnectAbstractNode<T extends Element>(abstractNode: Abstract
   return ref;
 }
 
-export function useNextDocViews(context: AbstractNode) {
+export function useNextDocViews(context: AnyAbstractNode) {
   const { configs: docConfigs } = useContext(documentContext);
-  const [nodes, setNodes] = useState(context.abstractNodes);
+  const [abstractNodes, setAbstractNodes] = useState(context.abstractNodes);
   useEffect(() => {
-    context.renderAbstractNodes = setNodes;
+    context.renderAbstractNodes = setAbstractNodes;
     return () => {
       context.renderAbstractNodes = undefined;
     };
   }, [context]);
   return useMemo(() => {
-    if (!nodes) {
+    if (!abstractNodes) {
       return null;
     }
-    return nodes.map(node => {
+    return abstractNodes.map(node => {
       const { View } = docConfigs[node.type];
-      return <View key={node.id} context={node as any} />;
+      return <View key={node.id} context={node} />;
     });
-  }, [nodes, docConfigs]);
+  }, [abstractNodes, docConfigs]);
 }
 
-export function useAbstractNodeData<T extends IDocNode>(abstractNode: AbstractNode<T>) {
-  const [data, setData] = useState(abstractNode.data);
+export function useAbstractNodeData<T extends AbstractNode<P, U>, P extends DocType, U>(abstractNode: T) {
+  const [data, setData] = useState<T['data']>(abstractNode.data);
   useEffect(() => {
     abstractNode.render = setData;
     return () => {
@@ -44,8 +44,8 @@ export function useAbstractNodeData<T extends IDocNode>(abstractNode: AbstractNo
   return data;
 }
 
-export function useOnIntent(node: AbstractNode, onIntent: NonNullable<AbstractNode['onViewIntent']>) {
+export function useOnViewHook<T extends DocType>(node: AbstractNode<T>, onViewHook: NonNullable<AbstractNode<T>['onViewHook']>) {
   useEffect(() => {
-    node.onViewIntent = onIntent;
-  }, [node, onIntent]);
+    node.onViewHook = onViewHook;
+  }, [node, onViewHook]);
 }
