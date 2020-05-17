@@ -1,9 +1,9 @@
 import React from 'react';
 import { AbstractNode } from "../AbstractNode";
-import { DocType, AbstractlistItem } from "../types";
+import { DocType, AbstractListItem } from "../types";
 import { useNextDocViews, useAbstractNodeData } from "./hooks";
 
-export function ListItemView({ context }: { context: AbstractlistItem }) {
+export function ListItemView({ context }: { context: AbstractListItem }) {
   const { order } = useAbstractNodeData(context);
   const views = useNextDocViews(context);
   return (

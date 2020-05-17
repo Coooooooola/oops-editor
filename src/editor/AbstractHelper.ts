@@ -3,6 +3,7 @@ import { AnyAbstractNode, traverseAbstractNodes } from "./AbstractNode";
 import { AbstractBaseEvent } from './AbstractBaseEvent';
 import { assert } from "./utils";
 import { AbstractEvent } from "./AbstractEvent";
+import { AbstractRange } from "./AbstractSelection";
 
 export enum SelectorResult {
   Bail = -1,
@@ -49,7 +50,7 @@ function findAbstractNode(
         event.bail();
     }
   }
-  traverseAbstractNodes(captureCallback, node, new AbstractBaseEvent(forward));
+  traverseAbstractNodes(captureCallback, node, new AbstractBaseEvent(node, forward));
   return ret;
 }
 
@@ -57,6 +58,8 @@ function findAbstractNode(
 // }
 
 export interface IntentDetails {
+  initiator?: AnyAbstractNode;
+  range?: AbstractRange | null;
   forward: boolean;
   configs: AbstractConfigs;
   originEvent?: any;
@@ -109,25 +112,25 @@ export class AbstractHelper {
     return selector;
   }
 
-  dispatchEvent<T, P>(
+  dispatchEvent<T, P = any>(
     rawEvent: RawAbstractEvent<P>,
-    { forward, point1, point2, boundary1, boundary2, configs, originEvent }: IntentDetails,
+    { initiator, range, forward, point1, point2, boundary1, boundary2, configs, originEvent }: IntentDetails,
   ): T | undefined {
     const { current } = this;
     if (!current) {
       return undefined;
     }
 
-    const abstractIntent = new AbstractEvent<P, T>(rawEvent, forward, originEvent);
+    const abstractEvent = new AbstractEvent<P, T>(current, rawEvent, forward, configs, range, initiator, originEvent);
     function captureCallback(node: AnyAbstractNode, event: AbstractEvent) {
-      (configs[node.type].onHook as any).call(node, event);
-      if (node.onViewHook) {
-        return node.onViewHook(event);
+      (configs[node.type].callHook as any).call(node, event);
+      if (node.callViewHook) {
+        return node.callViewHook(event);
       }
     }
 
-    traverseAbstractNodes(captureCallback, current, abstractIntent, boundary1 || point1, boundary2 || point2);
-    return abstractIntent.returnValue;
+    traverseAbstractNodes(captureCallback, current, abstractEvent, boundary1 || point1, boundary2 || point2);
+    return abstractEvent.returnValue;
   }
 
   assert(): AbstractHelper {

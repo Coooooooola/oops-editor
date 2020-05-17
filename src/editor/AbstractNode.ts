@@ -3,25 +3,25 @@ import { isPartialShallowEqual, assert, getAbstractNodePath } from "./utils";
 import { AbstractEvent } from "./AbstractEvent";
 import { AbstractBaseEvent } from "./AbstractBaseEvent";
 
-export type AnyAbstractNode<K extends DocType = DocType, T extends { [key: string]: any } = any> = AbstractNode<K, T>;
+export type AnyAbstractNode<K extends DocType = DocType> = AbstractNode<K>;
 
 export interface AbstractNode<
   K extends DocType,
-  T extends { [key: string]: any } | undefined = any,
-  P extends NonEmptyArray<AnyAbstractNode> | undefined = NonEmptyArray<AnyAbstractNode> | undefined
+  T extends { [key: string]: any } = any,
+  P extends NonEmptyArray<AnyAbstractNode> = NonEmptyArray<AnyAbstractNode>
 > {
   readonly type: K;
   readonly id: string;
 
-  readonly data: T;
-  readonly abstractNodes: P;
+  readonly data?: T;
+  readonly abstractNodes?: P;
 
   readonly parent?: AnyAbstractNode;
 
   render?(data: T): void;
   renderAbstractNodes?(abstractNodes: P): void;
 
-  onViewHook?(this: AbstractNode<K>, abstractEvent: AbstractEvent): void;
+  callViewHook?(this: AbstractNode<K>, abstractEvent: AbstractEvent): void;
 }
 
 // export function abstract<
@@ -48,9 +48,9 @@ export interface AbstractNode<
 //   } as T;
 // }
 
-export function abstractUpdate<T extends DocType>(writableNode: Writable<AbstractNode<T>>, partialData: Partial<T>) {
+export function abstractUpdate<T extends DocType>(writableNode: Writable<AbstractNode<T>>, partialData?: Partial<T>) {
   if (!isPartialShallowEqual(partialData, writableNode.data)) {
-    writableNode.data = Object.assign({}, writableNode.data, partialData);
+    writableNode.data = partialData === undefined ? undefined : Object.assign({}, writableNode.data, partialData);
     if (writableNode.render) {
       writableNode.render(writableNode.data);
     }
@@ -205,7 +205,7 @@ export function traverseAbstractNodesRecursively<T extends AbstractBaseEvent>(
 
       const end = node2
         ? (forward ? abstractNodes.indexOf(node2, start) : abstractNodes.lastIndexOf(node2, start))
-        : forward ? abstractNodes.length - 1 : 0;
+        : (forward ? abstractNodes.length - 1 : 0);
       assert(end !== -1);
   
       for (
@@ -213,19 +213,17 @@ export function traverseAbstractNodesRecursively<T extends AbstractBaseEvent>(
         !event.bailed && (forward ? i <= end : i >= end);
         i = forward ? i + 1 : i - 1
       ) {
-        const node = abstractNodes[i];
-        if (node.parent) {
-          event.index = i;
-          traverseAbstractNodesRecursively(
-            captureCallback,
-            event,
-            abstractNodes[i],
-            forward,
-            nextDepth,
-            i === start ? boundary1 : undefined,
-            i === end ? boundary2 : undefined,
-          );
-        }
+        assert(abstractNodes[i].parent);
+        event.index = i;
+        traverseAbstractNodesRecursively(
+          captureCallback,
+          event,
+          abstractNodes[i],
+          forward,
+          nextDepth,
+          i === start ? boundary1 : undefined,
+          i === end ? boundary2 : undefined,
+        );
       }
     }
   }
@@ -246,13 +244,11 @@ export function traverseAbstractNodes<T extends AbstractBaseEvent = AbstractBase
   arg2?: AnyAbstractNode[] | AnyAbstractNode,
 ) {
   const boundary1 = Array.isArray(arg1) ? arg1 : arg1 && getAbstractNodePath(arg1, origin);
-  const boundary2 = Array.isArray(arg2) ? arg2 : (
-    arg1 === arg2 ? boundary1 : arg2 && getAbstractNodePath(arg2, origin)
+  const boundary2 = arg1 === arg2 ? boundary1 : (
+    Array.isArray(arg2) ? arg2 : arg2 && getAbstractNodePath(arg2, origin)
   );
-  assert(
-    (!boundary1 || boundary1[0] === origin) &&
-    (!boundary2 || boundary2[0] === origin)
-  );
+  assert(!boundary1 || boundary1[0] === origin);
+  assert(!boundary2 || boundary2[0] === origin);
   event.boundary1 = boundary1;
   event.boundary2 = boundary2;
 

@@ -1,6 +1,7 @@
-import { AbstractEventType, DocType, RawAbstractEvent } from "./types";
+import { AbstractEventType, DocType, RawAbstractEvent, AbstractConfigs } from "./types";
 import { AbstractBaseEvent } from "./AbstractBaseEvent";
-import { AbstractPoint } from "./AbstractSelection";
+import { AbstractPoint, AbstractRange } from "./AbstractSelection";
+import { AnyAbstractNode } from "./AbstractNode";
 
 export type AbstractIntentTrace = {
   [docType in DocType]?: object;
@@ -17,13 +18,21 @@ export type AbstractIntentTrace = {
   },
 };
 
-export class AbstractEvent<T = any, R = any, U = any> extends AbstractBaseEvent<any, R, U> {
+export class AbstractEvent<P = any, R = any, E = any> extends AbstractBaseEvent<any, R, E> {
   type: AbstractEventType;
-  payload: T;
+  payload: P;
   trace: AbstractIntentTrace = {};
 
-  constructor(rawEvent: RawAbstractEvent, forward: boolean, originEvent?: U) {
-    super(forward, originEvent);
+  constructor(
+    root: AnyAbstractNode,
+    rawEvent: RawAbstractEvent,
+    forward: boolean,
+    public configs: AbstractConfigs,
+    range?: AbstractRange | null,
+    initiator?: AnyAbstractNode,
+    originEvent?: E,
+  ) {
+    super(root, forward, range, initiator, originEvent);
     this.type = rawEvent.type;
     this.payload = rawEvent.payload;
   }

@@ -33,7 +33,7 @@ export function useNextDocViews(context: AnyAbstractNode) {
   }, [abstractNodes, docConfigs]);
 }
 
-export function useAbstractNodeData<T extends AbstractNode<P, U>, P extends DocType, U>(abstractNode: T) {
+export function useAbstractNodeData<T extends AnyAbstractNode>(abstractNode: T) {
   const [data, setData] = useState<T['data']>(abstractNode.data);
   useEffect(() => {
     abstractNode.render = setData;
@@ -44,8 +44,8 @@ export function useAbstractNodeData<T extends AbstractNode<P, U>, P extends DocT
   return data;
 }
 
-export function useOnViewHook<T extends DocType>(node: AbstractNode<T>, onViewHook: NonNullable<AbstractNode<T>['onViewHook']>) {
+export function useViewHook<T extends AnyAbstractNode>(node: T, onViewHook: NonNullable<T['callViewHook']>) {
   useEffect(() => {
-    node.onViewHook = onViewHook;
+    node.callViewHook = onViewHook;
   }, [node, onViewHook]);
 }

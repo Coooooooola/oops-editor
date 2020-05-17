@@ -9,39 +9,52 @@ import { TextConfig } from "./docs/Text";
 export const defaultEditorConfigs: EditorConfigs = {
   [DocType.Doc]: {
     View: DocView,
-    onHook() {},
+    callHook() {},
   },
   [DocType.List]: {
     View: ListView,
-    onHook() {},
+    callHook() {},
   },
   [DocType.ListItem]: {
     View: ListItemView,
-    onHook() {},
+    callHook() {},
   },
   [DocType.Paragraph]: {
     View: ParagraphView,
-    onHook() {},
+    callHook() {},
   },
   [DocType.Text]: TextConfig,
 };
 
-const text: AbstractText = {
+const text1: AbstractText = {
   type: DocType.Text,
   id: randomId(),
   data: {
-    content: 'dddddddddd',
+    content: 'ddddeeeeeeeflekfjlwekrflekwerf lwl f ddd   ddd ',
   },
-  abstractNodes: undefined,
 };
+
+const text2: AbstractText = {
+  type: DocType.Text,
+  id: randomId(),
+  data: {
+    content: 'mewwrf lkwfe lwkrf lekr flkremf lskdn fkwef o',
+    style: {
+      color: 'red',
+      fontSize: 28,
+    }
+  },
+};
+
 
 const paragraph: AbstractParagraph = {
   type: DocType.Paragraph,
   id: randomId(),
   data: undefined,
-  abstractNodes: [text],
+  abstractNodes: [text1, text2],
 };
-(text as any).parent = paragraph;
+(text1 as any).parent = paragraph;
+(text2 as any).parent = paragraph;
 
 export const defaultAbstractNode: AbstractDoc = {
   type: DocType.Doc,

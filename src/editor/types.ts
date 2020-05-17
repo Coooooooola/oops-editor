@@ -63,56 +63,63 @@ export type NonEmptyArray<T> = [T, ...T[]];
 //   childNodes: NonEmptyArray<IDocParagraph | IDocList>;
 // }
 
-export type AbstractDoc = AbstractNode<DocType.Doc, undefined, NonEmptyArray<AbstractList | AbstractParagraph>>;
-
-export interface AbstractListData {
-  orderList: boolean;
+export interface AbstractDoc extends AbstractNode<DocType.Doc, never> {
+  readonly abstractNodes: NonEmptyArray<AbstractList | AbstractParagraph>;
 }
-export type AbstractList = AbstractNode<DocType.List, AbstractListData, NonEmptyArray<AbstractParagraph | AbstractList | AbstractlistItem>>;
 
-export interface AbstractListItemData {
-  order: string;
+export interface AbstractList extends AbstractNode<DocType.List> {
+  readonly data: {
+    orderList: boolean;
+  };
+  readonly abstractNodes: NonEmptyArray<AbstractListItem | AbstractParagraph>;
 }
-export type AbstractlistItem = AbstractNode<DocType.ListItem, AbstractListItemData, NonEmptyArray<AbstractParagraph>>;
 
-export interface AbstractParagraphData {
-  align?: Align;
+export interface AbstractListItem extends AbstractNode<DocType.ListItem> {
+  readonly data: {
+    order: string;
+  };
+  readonly abstractNodes: NonEmptyArray<AbstractParagraph>;
 }
-export type AbstractParagraph = AbstractNode<DocType.Paragraph, AbstractParagraphData | undefined, NonEmptyArray<AbstractText>>;
 
-export interface AbstractTextData {
-  content: string;
-  style?: {
-    fontFamily?: CSSProperties['fontFamily'];
-    fontStyle?: CSSProperties['fontStyle'];
-    fontSize?: CSSProperties['fontSize'];
-    color?: CSSProperties['color'];
-    fontWeight?: CSSProperties['fontWeight'];
-    textDecoration?: CSSProperties['textDecoration'];
+export interface AbstractParagraph extends AbstractNode<DocType.Paragraph> {
+  readonly data?: {
+    align: Align;
+  };
+  readonly abstractNodes: NonEmptyArray<AbstractText>;
+}
+
+export interface AbstractText extends AbstractNode<DocType.Text> {
+  readonly data: {
+    content: string;
+    style?: {
+      fontFamily?: CSSProperties['fontFamily'];
+      fontStyle?: CSSProperties['fontStyle'];
+      fontSize?: CSSProperties['fontSize'];
+      color?: CSSProperties['color'];
+      fontWeight?: CSSProperties['fontWeight'];
+      textDecoration?: CSSProperties['textDecoration'];
+    };
   };
 }
-export type AbstractText = AbstractNode<DocType.Text, AbstractTextData, undefined>;
 
 export enum AbstractEventType {
   // Selection
   SelectionSynchronize,
-  SelectionForward,
-  SelectionBackward,
-  SelectionExtendForward,
-  SelectionExtendBackward,
   SelectionRendering,
+  SelectionMove,
+  SelectionTryMove,
 
   // Text
   TextStyle,
   TextDelete,
   TextDeleteBackward,
   TextInsert,
+  TextEnter,
 
   // Paragraph
 }
 
 export interface SelectionSynchronizePayload {
-  range: AbstractRange | null;
   isCollapsed: boolean;
   anchorNode: Node;
   anchorOffset: number;
@@ -122,8 +129,15 @@ export interface SelectionSynchronizePayload {
   focusAbstractNode: AnyAbstractNode;
 }
 
-export interface SelectionRenderingPayload {
-  range: AbstractRange;
+export interface SelectionMovePayload {
+  forward: boolean;
+  shift: boolean;
+  step: number;
+}
+
+export interface SelectionTryMovePayload {
+  step: number;
+  forward: boolean;
 }
 
 export interface RawAbstractEvent<T = any> {
@@ -133,7 +147,7 @@ export interface RawAbstractEvent<T = any> {
 
 export type AbstractConfigs = {
   [docType in DocType]: {
-    onHook(this: AbstractNode<docType>, abstractEvent: AbstractEvent): void | BubbleCallback;
+    callHook(this: AbstractNode<docType>, abstractEvent: AbstractEvent): void | BubbleCallback;
   };
 };
 

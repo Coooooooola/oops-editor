@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { AbstractNode } from "../AbstractNode";
-import { AbstractEventType, SelectionSynchronizePayload, SelectionRenderingPayload, DocType, AbstractDoc } from "../types";
-import { useNextDocViews, useConnectAbstractNode, useOnViewHook } from "./hooks";
+import { AbstractEventType, SelectionSynchronizePayload, DocType, AbstractDoc } from "../types";
+import { useNextDocViews, useConnectAbstractNode, useViewHook } from "./hooks";
 import { AbstractEvent, AbstractIntentTrace } from '../AbstractEvent';
 import { AbstractRange, AbstractPoint } from '../AbstractSelection';
 
@@ -12,14 +12,12 @@ function docSyncSelection(event: AbstractEvent<SelectionSynchronizePayload, Abst
       event.returnValue = new AbstractRange(
         selection.anchorPoint,
         selection.focusPoint,
-        AbstractPoint.equals(selection.anchorPoint, selection.focusPoint),
-        event.forward,
       );
     }
   };
 }
 
-function docRenderSelection(event: AbstractEvent<SelectionRenderingPayload, AbstractIntentTrace['windowSelection']>) {
+function docRenderSelection(event: AbstractEvent<any, AbstractIntentTrace['windowSelection']>) {
   return function bubbleDocRenderSelection() {
     const windowSelection = event.trace.windowSelection;
     if (
@@ -35,7 +33,7 @@ function docRenderSelection(event: AbstractEvent<SelectionRenderingPayload, Abst
 }
 
 function createViewHook() {
-  return function onViewHook(this: AbstractDoc, event: AbstractEvent) {
+  return function callViewHook(this: AbstractDoc, event: AbstractEvent) {
     switch (event.type) {
       case AbstractEventType.SelectionSynchronize:
         return docSyncSelection(event);
@@ -45,13 +43,13 @@ function createViewHook() {
   }
 }
 
-function useDocOnViewHook(node: AbstractDoc, ref: React.RefObject<HTMLSpanElement>) {
+function useDocViewHook(node: AbstractDoc, ref: React.RefObject<HTMLSpanElement>) {
   const onIntent = useMemo(() => createViewHook(), []);
-  return useOnViewHook(node, onIntent);
+  return useViewHook(node, onIntent);
 }
 
 export function DocView({ context }: { context: AbstractDoc }) {
   const ref = useConnectAbstractNode<HTMLDivElement>(context);
-  useDocOnViewHook(context, ref);
+  useDocViewHook(context, ref);
   return <div ref={ref}>{useNextDocViews(context)}</div>;
 }

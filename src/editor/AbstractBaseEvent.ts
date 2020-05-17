@@ -1,6 +1,7 @@
 import { AnyAbstractNode } from "./AbstractNode";
+import { AbstractRange } from "./AbstractSelection";
 
-export class AbstractBaseEvent<T = any, R = any, U = Event | undefined> {
+export class AbstractBaseEvent<T = any, R = any, E = Event | undefined> {
   propagating = true;
   bailed = false;
   depth = -1;
@@ -16,7 +17,13 @@ export class AbstractBaseEvent<T = any, R = any, U = Event | undefined> {
   trace?: T;
   returnValue?: R;
 
-  constructor(public readonly forward: boolean, public readonly originEvent?: U) {}
+  constructor(
+    public readonly root: AnyAbstractNode,
+    public readonly forward: boolean,
+    public readonly range?: AbstractRange | null,
+    public readonly initiator?: AnyAbstractNode,
+    public readonly originEvent?: E,
+  ) {}
 
   stopPropagation() {
     this.propagating = false;

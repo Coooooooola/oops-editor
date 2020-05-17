@@ -1,6 +1,6 @@
 import { AbstractNode, AnyAbstractNode } from "./AbstractNode";
 import { assert, findAbstractNodeFromDOM, findAbstractNode, compareAbstractPosition } from "./utils";
-import { AbstractConfigs, AbstractEventType, SelectionSynchronizePayload, AbstractPosition, SelectionRenderingPayload } from "./types";
+import { AbstractConfigs, AbstractEventType, SelectionSynchronizePayload, AbstractPosition, SelectionMovePayload } from "./types";
 import { AbstractHelper } from "./AbstractHelper";
 import { AbstractIntentTrace } from "./AbstractEvent";
 
@@ -19,12 +19,37 @@ export class AbstractPoint {
 }
 
 export class AbstractRange {
+  public readonly collapsed: boolean;
+  public readonly isForward: boolean;
   constructor(
     public readonly anchor: AbstractPoint,
     public readonly focus: AbstractPoint,
-    public readonly collapsed: boolean,
-    public readonly isForward: boolean,
-  ) {}
+  ) {
+    this.collapsed = AbstractPoint.equals(anchor, focus);
+
+    const position = compareAbstractPosition(anchor.node, focus.node);
+    let forward: boolean;
+    switch (position) {
+      case AbstractPosition.Same:
+        forward = anchor.offset <= focus.offset;
+        break;
+      case AbstractPosition.Following:
+        forward = true;
+        break;
+      case AbstractPosition.Preceding:
+        forward = false;
+        break;
+      case AbstractPosition.Contains:
+        forward = focus.offset === 0 ? true : false;
+        break;
+      case AbstractPosition.ContainedBy:
+        forward = anchor.offset === 0 ? true : false;
+        break;
+      default:
+        throw new Error();
+    }
+    this.isForward = forward;
+  }
 
   static equals(range1: AbstractRange, range2: AbstractRange) {
     return range1 === range2 || (
@@ -54,16 +79,17 @@ export class AbstractSelection {
       return false;
     }
     const { anchor, focus, isForward, collapsed } = range;
-    const type = shift
-      ? (forward ? AbstractEventType.SelectionExtendForward : AbstractEventType.SelectionExtendBackward)
-      : (forward ? AbstractEventType.SelectionForward : AbstractEventType.SelectionBackward);
-    const newRange = helper.dispatchEvent<AbstractRange, any>({ type, payload: { range, step } }, {
-      forward,
+    const newRange = helper.dispatchEvent<AbstractRange, SelectionMovePayload>({
+      type: AbstractEventType.SelectionMove,
+      payload: { shift, forward, step },
+    }, {
+      range,
+      forward: isForward,
       configs,
       point1: anchor.node,
       point2: focus.node,
     }) || null;
-    return this.updateRange(newRange);
+  return this.updateRange(newRange);
   }
 
   forward(shift: boolean, step: number, event: KeyboardEvent) {
@@ -92,12 +118,14 @@ export class AbstractSelection {
   }
 
   renderWindowSelection(windowSelection: Selection) {
+    const { helper } = this;
     if (this.range) {
       const { anchor, focus, isForward } = this.range;
-      const selection = this.helper.dispatchEvent<AbstractIntentTrace['windowSelection'], SelectionRenderingPayload>({
+      const selection = helper.dispatchEvent<AbstractIntentTrace['windowSelection']>({
         type: AbstractEventType.SelectionRendering,
-        payload: { range: this.range },
+        payload: undefined,
       }, {
+        range: this.range,
         forward: isForward,
         configs: this.configs,
         point1: anchor.node,
@@ -105,16 +133,18 @@ export class AbstractSelection {
       });
 
       if (selection) {
-        const { anchorNode, anchorOffset, focusNode, focusOffset } = selection;
+        const { anchorNode, anchorOffset, focusNode, focusOffset } = windowSelection;
         if (
-          !windowSelection ||
-          windowSelection.anchorNode !== anchorNode ||
-          windowSelection.anchorOffset !== anchorOffset ||
-          windowSelection.focusNode !== focusNode ||
-          windowSelection.focusOffset !== focusOffset
+          anchorNode !== selection.anchorNode ||
+          anchorOffset !== selection.anchorOffset
         ) {
-          windowSelection.collapse(anchorNode!, anchorOffset!);
-          windowSelection.extend(focusNode!, focusOffset!);
+          windowSelection.collapse(selection.anchorNode!, selection.anchorOffset);
+        }
+        if (
+          focusNode !== selection.focusNode ||
+          focusOffset !== selection.focusOffset
+        ) {
+          windowSelection.extend(selection.focusNode!, selection.focusOffset!);
         }
         return;
       }
@@ -170,10 +200,10 @@ export class AbstractSelection {
         throw new Error();
     }
 
-    const newRange = this.helper.dispatchEvent<AbstractRange, SelectionSynchronizePayload>({
+    const { helper } = this;
+    const newRange = helper.dispatchEvent<AbstractRange, SelectionSynchronizePayload>({
       type: AbstractEventType.SelectionSynchronize,
       payload: {
-        range: this.range,
         isCollapsed,
         anchorNode,
         anchorOffset,
@@ -183,6 +213,7 @@ export class AbstractSelection {
         focusAbstractNode,
       },
     }, {
+      range: this.range,
       forward,
       configs: this.configs,
       point1: anchorAbstractNode,

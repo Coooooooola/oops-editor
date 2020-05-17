@@ -1,9 +1,10 @@
 import React, { ReactNode, useMemo, useEffect } from "react";
 import { AbstractSelection } from "./AbstractSelection";
-import { isMoveForward, isMoveBackward, isExtendForward, isExtendBackward, isBold, isItalic, isDeleteBackward, isDeleteForward } from './hotkeys';
+import { isMoveForward, isMoveBackward, isExtendForward, isExtendBackward, isBold, isItalic, isDeleteBackward, isDeleteForward, isSplitBlock } from './hotkeys';
 import { AbstractNode, AnyAbstractNode } from "./AbstractNode";
 import { AbstractConfigs, AbstractEventType } from "./types";
 import { $, AbstractHelper } from './AbstractHelper';
+import { assert } from "./utils";
 
 export class IntentSystem {
   private helper: AbstractHelper;
@@ -15,21 +16,22 @@ export class IntentSystem {
   }
 
   nextKeyDown(event: React.KeyboardEvent) {
-    const { abstractSelection, configs } = this;
+    const { abstractSelection, configs, helper } = this;
     const { nativeEvent } = event;
+    assert(helper.current);
 
     if (isMoveForward(nativeEvent)) {
       console.log('forward');
-      abstractSelection.forward(false, 1, nativeEvent);
+      abstractSelection.forward(false, (window as any).step || 1, nativeEvent);
     } else if (isMoveBackward(nativeEvent)) {
       console.log('backward');
-      abstractSelection.backward(false, 1, nativeEvent);
+      abstractSelection.backward(false, (window as any).step || 1, nativeEvent);
     } else if (isExtendForward(nativeEvent)) {
       console.log('extend forward');
-      abstractSelection.forward(true, 1, nativeEvent);
+      abstractSelection.forward(true, (window as any).step || 1, nativeEvent);
     } else if (isExtendBackward(nativeEvent)) {
       console.log('extend backward');
-      abstractSelection.backward(true, 1, nativeEvent);
+      abstractSelection.backward(true, (window as any).step || 1, nativeEvent);
     } else if (isBold(nativeEvent)) {
       console.log('bold');
     } else if (isItalic(nativeEvent)) {
@@ -38,19 +40,35 @@ export class IntentSystem {
       console.log('delete backward');
     } else if (isDeleteForward(nativeEvent)) {
       console.log('delete forward');
+    } else if (isSplitBlock(nativeEvent)) {
+      event.preventDefault();
+      const { range } = abstractSelection;
+      if (range) {
+        const { anchor, focus, isForward } = range;
+        helper.dispatchEvent({
+          type: AbstractEventType.TextEnter,
+          payload: undefined,
+        }, {
+          range,
+          forward: true,
+          point1: anchor.node,
+          point2: focus.node,
+          configs,
+        });
+      }
     } else if (event.keyCode >= 65 && event.keyCode <= 90) {
       console.log(event.key);
       const { range } = abstractSelection;
       if (range) {
         const { anchor, focus, isForward } = range;
         event.preventDefault();
-        this.helper.dispatchEvent({
+        helper.dispatchEvent({
           type: AbstractEventType.TextInsert,
           payload: {
             key: event.key,
-            range,
           },
         }, {
+          range,
           forward: isForward,
           point1: anchor.node,
           point2: focus.node,
