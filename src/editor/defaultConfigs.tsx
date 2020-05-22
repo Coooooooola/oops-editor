@@ -1,28 +1,24 @@
 import { EditorConfigs, DocType, AbstractDoc, AbstractParagraph, AbstractText } from "./types";
 import { randomId } from "./utils";
 import { ListView } from "./DocViews";
-import { DocView } from "./docs/Doc";
+import { DocView, DocConfig } from "./docs/Doc";
 import { ListItemView } from "./docs/ListItem";
-import { ParagraphView } from "./docs/Paragraph";
+import { ParagraphView, paragraphConfig } from "./docs/Paragraph";
 import { TextConfig } from "./docs/Text";
 
 export const defaultEditorConfigs: EditorConfigs = {
-  [DocType.Doc]: {
-    View: DocView,
-    callHook() {},
-  },
+  [DocType.Doc]: DocConfig,
   [DocType.List]: {
     View: ListView,
-    callHook() {},
+    hooks: {},
+    browserHooks: {},
   },
   [DocType.ListItem]: {
     View: ListItemView,
-    callHook() {},
+    hooks: {},
+    browserHooks: {},
   },
-  [DocType.Paragraph]: {
-    View: ParagraphView,
-    callHook() {},
-  },
+  [DocType.Paragraph]: paragraphConfig,
   [DocType.Text]: TextConfig,
 };
 
@@ -30,7 +26,11 @@ const text1: AbstractText = {
   type: DocType.Text,
   id: randomId(),
   data: {
-    content: 'ddddeeeeeeeflekfjlwekrflekwerf lwl f ddd   ddd ',
+    content: '0123456789',
+    style: {
+      color: 'darkred',
+      fontSize: 20,
+    },
   },
 };
 
@@ -38,7 +38,7 @@ const text2: AbstractText = {
   type: DocType.Text,
   id: randomId(),
   data: {
-    content: 'mewwrf lkwfe lwkrf lekr flkremf lskdn fkwef o',
+    content: '0123456789',
     style: {
       color: 'red',
       fontSize: 28,
@@ -46,15 +46,27 @@ const text2: AbstractText = {
   },
 };
 
+const text3: AbstractText = {
+  type: DocType.Text,
+  id: randomId(),
+  data: {
+    content: '0123456789',
+    style: {
+      color: 'green',
+      fontSize: 24,
+    }
+  },
+};
 
 const paragraph: AbstractParagraph = {
   type: DocType.Paragraph,
   id: randomId(),
   data: undefined,
-  abstractNodes: [text1, text2],
+  abstractNodes: [text1, text2, text3],
 };
 (text1 as any).parent = paragraph;
 (text2 as any).parent = paragraph;
+(text3 as any).parent = paragraph;
 
 export const defaultAbstractNode: AbstractDoc = {
   type: DocType.Doc,

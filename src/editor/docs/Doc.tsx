@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { AbstractNode } from "../AbstractNode";
-import { AbstractEventType, SelectionSynchronizePayload, DocType, AbstractDoc } from "../types";
-import { useNextDocViews, useConnectAbstractNode, useViewHook } from "./hooks";
+import { AbstractEventType, SelectionSynchronizePayload, DocType, AbstractDoc, AbstractBrowserHooks } from "../types";
+import { useNextDocViews, useConnectAbstractNode, useViewData } from "./hooks";
 import { AbstractEvent, AbstractIntentTrace } from '../AbstractEvent';
 import { AbstractRange, AbstractPoint } from '../AbstractSelection';
 
@@ -32,24 +32,18 @@ function docRenderSelection(event: AbstractEvent<any, AbstractIntentTrace['windo
   };
 }
 
-function createViewHook() {
-  return function callViewHook(this: AbstractDoc, event: AbstractEvent) {
-    switch (event.type) {
-      case AbstractEventType.SelectionSynchronize:
-        return docSyncSelection(event);
-      case AbstractEventType.SelectionRendering:
-        return docRenderSelection(event);
-    }
-  }
-}
-
-function useDocViewHook(node: AbstractDoc, ref: React.RefObject<HTMLSpanElement>) {
-  const onIntent = useMemo(() => createViewHook(), []);
-  return useViewHook(node, onIntent);
-}
-
 export function DocView({ context }: { context: AbstractDoc }) {
   const ref = useConnectAbstractNode<HTMLDivElement>(context);
-  useDocViewHook(context, ref);
   return <div ref={ref}>{useNextDocViews(context)}</div>;
 }
+
+const browserHooks: AbstractBrowserHooks = {
+  [AbstractEventType.SelectionSynchronize]: docSyncSelection,
+  [AbstractEventType.SelectionRendering]: docRenderSelection,
+};
+
+export const DocConfig = {
+  View: DocView,
+  hooks: {},
+  browserHooks,
+};

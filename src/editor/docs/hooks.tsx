@@ -44,8 +44,11 @@ export function useAbstractNodeData<T extends AnyAbstractNode>(abstractNode: T) 
   return data;
 }
 
-export function useViewHook<T extends AnyAbstractNode>(node: T, onViewHook: NonNullable<T['callViewHook']>) {
+export function useViewData<T extends AnyAbstractNode>(node: T, viewData: AnyAbstractNode['viewData']) {
   useEffect(() => {
-    node.callViewHook = onViewHook;
-  }, [node, onViewHook]);
+    node.viewData = viewData;
+    return () => {
+      node.viewData = undefined;
+    };
+  }, [node, viewData]);
 }

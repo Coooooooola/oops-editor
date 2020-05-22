@@ -113,7 +113,7 @@ export enum AbstractEventType {
   TextStyle,
   TextDelete,
   TextDeleteBackward,
-  TextInsert,
+  ContentReplace,
   TextEnter,
 
   // Paragraph
@@ -145,9 +145,22 @@ export interface RawAbstractEvent<T = any> {
   payload: T;
 }
 
+export type AbstractHook = (this: any, abstractEvent: AbstractEvent) => void | BubbleCallback;
+
+export type AbstractHooks = {
+  [type in AbstractEventType]?: AbstractHook;
+}
+
+export type AbstractBrowserHook = (this: any, abstractEvent: AbstractEvent, viewData: any) => void | BubbleCallback;
+
+export type AbstractBrowserHooks = {
+  [type in AbstractEventType]?: AbstractBrowserHook;
+}
+
 export type AbstractConfigs = {
   [docType in DocType]: {
-    callHook(this: AbstractNode<docType>, abstractEvent: AbstractEvent): void | BubbleCallback;
+    hooks: AbstractHooks,
+    browserHooks: AbstractBrowserHooks,
   };
 };
 

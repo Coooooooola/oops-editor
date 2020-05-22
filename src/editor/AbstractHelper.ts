@@ -1,4 +1,4 @@
-import { RawAbstractEvent, DocType, AbstractConfigs } from "./types";
+import { RawAbstractEvent, DocType, AbstractConfigs, AbstractHook, AbstractBrowserHook } from "./types";
 import { AnyAbstractNode, traverseAbstractNodes } from "./AbstractNode";
 import { AbstractBaseEvent } from './AbstractBaseEvent';
 import { assert } from "./utils";
@@ -121,11 +121,26 @@ export class AbstractHelper {
       return undefined;
     }
 
+    const interestHooks: any = {};
+    for (const [key, value] of Object.entries(configs)) {
+      const hook = value.hooks[rawEvent.type];
+      const browserHooks = value.browserHooks[rawEvent.type];
+      if (hook || browserHooks) {
+        interestHooks[key] = { hook, browserHooks };
+      }
+    }
+
     const abstractEvent = new AbstractEvent<P, T>(current, rawEvent, forward, configs, range, initiator, originEvent);
-    function captureCallback(node: AnyAbstractNode, event: AbstractEvent) {
-      (configs[node.type].callHook as any).call(node, event);
-      if (node.callViewHook) {
-        return node.callViewHook(event);
+    function captureCallback(node: AnyAbstractNode) {
+      const value = interestHooks[node.type]
+      if (value) {
+        const { hook, browserHooks } = value;
+        const bubble1 = hook && hook.call(node, abstractEvent);
+        const bubble2 = browserHooks && browserHooks.call(node, abstractEvent, node.viewData);
+        return bubble1 && bubble2 ? function bubbleCallback() {
+          bubble2();
+          bubble1();
+        } : bubble1 || bubble2 || undefined;
       }
     }
 

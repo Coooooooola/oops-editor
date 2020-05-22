@@ -8,7 +8,8 @@ export type AnyAbstractNode<K extends DocType = DocType> = AbstractNode<K>;
 export interface AbstractNode<
   K extends DocType,
   T extends { [key: string]: any } = any,
-  P extends NonEmptyArray<AnyAbstractNode> = NonEmptyArray<AnyAbstractNode>
+  P extends NonEmptyArray<AnyAbstractNode> = NonEmptyArray<AnyAbstractNode>,
+  U extends { [key: string]: any } = any,
 > {
   readonly type: K;
   readonly id: string;
@@ -21,7 +22,8 @@ export interface AbstractNode<
   render?(data: T): void;
   renderAbstractNodes?(abstractNodes: P): void;
 
-  callViewHook?(this: AbstractNode<K>, abstractEvent: AbstractEvent): void;
+  viewData?: U;
+  // callViewHook?(this: AbstractNode<K>, abstractEvent: AbstractEvent): void;
 }
 
 // export function abstract<
@@ -48,7 +50,7 @@ export interface AbstractNode<
 //   } as T;
 // }
 
-export function abstractUpdate<T extends DocType>(writableNode: Writable<AbstractNode<T>>, partialData?: Partial<T>) {
+export function abstractUpdate<T extends AbstractNode<DocType>>(writableNode: Writable<T>, partialData?: Partial<T['data']>) {
   if (!isPartialShallowEqual(partialData, writableNode.data)) {
     writableNode.data = partialData === undefined ? undefined : Object.assign({}, writableNode.data, partialData);
     if (writableNode.render) {

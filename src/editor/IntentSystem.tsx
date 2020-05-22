@@ -1,8 +1,8 @@
 import React, { ReactNode, useMemo, useEffect } from "react";
-import { AbstractSelection } from "./AbstractSelection";
+import { AbstractSelection, AbstractRange } from "./AbstractSelection";
 import { isMoveForward, isMoveBackward, isExtendForward, isExtendBackward, isBold, isItalic, isDeleteBackward, isDeleteForward, isSplitBlock } from './hotkeys';
 import { AbstractNode, AnyAbstractNode } from "./AbstractNode";
-import { AbstractConfigs, AbstractEventType } from "./types";
+import { AbstractConfigs, AbstractEventType, SelectionMovePayload } from "./types";
 import { $, AbstractHelper } from './AbstractHelper';
 import { assert } from "./utils";
 
@@ -36,10 +36,49 @@ export class IntentSystem {
       console.log('bold');
     } else if (isItalic(nativeEvent)) {
       console.log('italic');
-    } else if (isDeleteBackward(nativeEvent)) {
-      console.log('delete backward');
-    } else if (isDeleteForward(nativeEvent)) {
-      console.log('delete forward');
+    } else if (isDeleteBackward(nativeEvent) || isDeleteForward(nativeEvent)) {
+      const deleteForward = !!isDeleteForward(nativeEvent);
+      console.log(deleteForward ? 'delete backward' : 'delete forward');
+      nativeEvent.preventDefault();
+      const { range } = this.abstractSelection;
+      if (range) {
+        const { isForward, collapsed, anchor, focus } = range;
+        let deleteRange: AbstractRange | undefined;
+        if (collapsed) {
+          deleteRange = helper.dispatchEvent<AbstractRange, SelectionMovePayload>({
+            type: AbstractEventType.SelectionMove,
+            payload: { shift: true, forward: deleteForward, step: 1 },
+          }, {
+            range,
+            forward: isForward,
+            point1: anchor.node,
+            point2: focus.node,
+            configs: this.configs,
+          });
+        } else {
+          deleteRange = range;
+        }
+
+        if (deleteRange && !deleteRange.collapsed) {
+          const abstractRange: AbstractRange = helper.dispatchEvent({
+            type: AbstractEventType.ContentReplace,
+            payload: {
+              key: '',
+            },
+          }, {
+            range: deleteRange,
+            forward: deleteRange.isForward,
+            point1: deleteRange.anchor.node,
+            point2: deleteRange.focus.node,
+            configs,
+            originEvent: event,
+          }) as AbstractRange;
+          assert(abstractRange);
+          Promise.resolve().then(() => {
+            this.abstractSelection.updateRange(abstractRange);
+          });
+        }
+      }
     } else if (isSplitBlock(nativeEvent)) {
       event.preventDefault();
       const { range } = abstractSelection;
@@ -56,14 +95,20 @@ export class IntentSystem {
           configs,
         });
       }
-    } else if (event.keyCode >= 65 && event.keyCode <= 90) {
+    } else if (
+      !event.metaKey && (
+        event.keyCode === 32 ||
+        (event.keyCode >= 48 && event.keyCode <= 90) ||
+        (event.keyCode >= 186 && event.keyCode <= 223)
+      )
+    ) {
       console.log(event.key);
       const { range } = abstractSelection;
       if (range) {
         const { anchor, focus, isForward } = range;
         event.preventDefault();
-        helper.dispatchEvent({
-          type: AbstractEventType.TextInsert,
+        const abstractRange: AbstractRange = helper.dispatchEvent({
+          type: AbstractEventType.ContentReplace,
           payload: {
             key: event.key,
           },
@@ -74,6 +119,10 @@ export class IntentSystem {
           point2: focus.node,
           configs,
           originEvent: event,
+        }) as AbstractRange;
+        assert(abstractRange);
+        Promise.resolve().then(() => {
+          this.abstractSelection.updateRange(abstractRange);
         });
       }
     }
@@ -115,6 +164,7 @@ export function UserIntention({ root, configs, children }: IntentProps) {
 
   return (
     <div
+      spellCheck={false}
       contentEditable
       suppressContentEditableWarning
       style={{ outline: 'none' }}
