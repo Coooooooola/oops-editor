@@ -42,6 +42,7 @@ export class IntentSystem {
       abstractSelection.backward(true, 1, nativeEvent);
     } else if (isBold(nativeEvent)) {
       console.log('bold');
+      event.preventDefault();
     } else if (isItalic(nativeEvent)) {
       console.log('italic');
     } else if (isDeleteBackward(nativeEvent) || isDeleteForward(nativeEvent)) {

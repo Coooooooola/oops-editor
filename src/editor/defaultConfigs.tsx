@@ -30,7 +30,7 @@ const text1: AbstractText = {
     content: '0123456789',
     style: {
       color: 'darkred',
-      fontSize: 26,
+      fontSize: 60,
     },
   },
 };
@@ -42,7 +42,7 @@ const text2: AbstractText = {
     content: '0123456789',
     style: {
       color: 'red',
-      fontSize: 28,
+      fontSize: 80,
     }
   },
 };
@@ -54,7 +54,7 @@ const text3: AbstractText = {
     content: '0123456789',
     style: {
       color: 'green',
-      fontSize: 24,
+      fontSize: 70,
     }
   },
 };

@@ -46,7 +46,7 @@ export class AbstractRange {
         forward = anchor.offset === 0 ? true : false;
         break;
       default:
-        throw new Error();
+        throw new Error('Disconnect.');
     }
     this.isForward = forward;
   }
