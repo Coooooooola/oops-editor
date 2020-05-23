@@ -1,0 +1,7 @@
+.editable:focus ::selection {
+    background-color: #bad7fb;
+}
+
+.editable ::selection {
+    background-color: #dcdcdc;
+}

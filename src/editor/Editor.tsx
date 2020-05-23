@@ -3,7 +3,7 @@ import { UserIntention } from './IntentSystem';
 import { EditorConfigs, DocType } from './types';
 import { AbstractNode, AnyAbstractNode } from './AbstractNode';
 import { defaultEditorConfigs, defaultAbstractNode } from './defaultConfigs';
-import { DocDocument } from './docs/DocDocument';
+import { EditorDocument } from './docs/EditorDocument';
 
 interface EditorProps {
   abstractNode?: AnyAbstractNode;
@@ -17,7 +17,7 @@ export function Editor({
   (window as any).root = abstractNode;
   return (
     <UserIntention root={abstractNode} configs={configs}>
-      <DocDocument root={abstractNode} configs={configs} />
+      <EditorDocument root={abstractNode} configs={configs} />
     </UserIntention>
   );
 }

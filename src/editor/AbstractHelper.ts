@@ -1,5 +1,5 @@
 import { RawAbstractEvent, DocType, AbstractConfigs, AbstractHook, AbstractBrowserHook } from "./types";
-import { AnyAbstractNode, traverseAbstractNodes } from "./AbstractNode";
+import { AnyAbstractNode, traverseAbstractNodes, AbstractNode } from "./AbstractNode";
 import { AbstractBaseEvent } from './AbstractBaseEvent';
 import { assert } from "./utils";
 import { AbstractEvent } from "./AbstractEvent";
@@ -148,8 +148,12 @@ export class AbstractHelper {
     return abstractEvent.returnValue;
   }
 
-  assert(): AbstractHelper {
-    assert(this.current);
+  is(question: (node: AnyAbstractNode | null) => boolean): AbstractHelper {
+    return question(this.current) ? this : emptyAbstractHelper;
+  }
+
+  assert(assertion: (node: AnyAbstractNode | null) => boolean): AbstractHelper {
+    assert(assertion(this.current));
     return this;
   }
 

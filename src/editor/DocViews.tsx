@@ -1,6 +1,6 @@
 import React, { useContext, useMemo, useState } from 'react';
 import { AbstractNode, AnyAbstractNode } from './AbstractNode';
-import { documentContext } from './docs/DocDocument';
+import { documentContext } from './docs/EditorDocument';
 import { DocType, AbstractList } from './types';
 
 function useNextDocViews(context: AnyAbstractNode) {

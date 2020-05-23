@@ -20,10 +20,24 @@ export interface AbstractNode<
   readonly parent?: AnyAbstractNode;
 
   render?(data: T): void;
-  renderAbstractNodes?(abstractNodes: P): void;
+  renderAbstractNodes?(abstractNodes?: P): void;
 
   viewData?: U;
-  // callViewHook?(this: AbstractNode<K>, abstractEvent: AbstractEvent): void;
+
+  batch?: {
+    data?: T;
+    abstractNodes?: P;
+  };
+}
+
+export function linkAbstractNode(root: AnyAbstractNode) {
+  const { abstractNodes } = root;
+  if (abstractNodes) {
+    for (const node of abstractNodes) {
+      (node as Writable<AnyAbstractNode>).parent = root;
+      linkAbstractNode(node);
+    }
+  }
 }
 
 // export function abstract<
@@ -55,6 +69,15 @@ export function abstractUpdate<T extends AbstractNode<DocType>>(writableNode: Wr
     writableNode.data = partialData === undefined ? undefined : Object.assign({}, writableNode.data, partialData);
     if (writableNode.render) {
       writableNode.render(writableNode.data);
+    }
+  }
+}
+
+export function abstractUpdateAbstractNodes<T extends AbstractNode<DocType>>(writableNode: Writable<T>, abstractNodes: T['abstractNodes']) {
+  if (writableNode.abstractNodes !== abstractNodes) {
+    writableNode.abstractNodes = abstractNodes;
+    if (writableNode.renderAbstractNodes) {
+      writableNode.renderAbstractNodes(abstractNodes);
     }
   }
 }
@@ -182,7 +205,7 @@ export function traverseAbstractNodesRecursively<T extends AbstractBaseEvent>(
 
   const bubbleCallback = captureCallback(node, event);
   const { abstractNodes } = node;
-  
+
   if (event.propagating && !event.bailed && abstractNodes) {
     const nextDepth = depth + 1;
     const node1 = boundary1 && nextDepth < boundary1.length && boundary1[nextDepth];

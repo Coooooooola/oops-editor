@@ -27,7 +27,7 @@ interface DocumentProps {
   configs: DocConfigs;
 }
 
-export function DocDocument({
+export function EditorDocument({
   root,
   configs,
 }: DocumentProps) {

@@ -5,6 +5,7 @@ import { DocView, DocConfig } from "./docs/Doc";
 import { ListItemView } from "./docs/ListItem";
 import { ParagraphView, paragraphConfig } from "./docs/Paragraph";
 import { TextConfig } from "./docs/Text";
+import { linkAbstractNode } from "./AbstractNode";
 
 export const defaultEditorConfigs: EditorConfigs = {
   [DocType.Doc]: DocConfig,
@@ -29,7 +30,7 @@ const text1: AbstractText = {
     content: '0123456789',
     style: {
       color: 'darkred',
-      fontSize: 20,
+      fontSize: 26,
     },
   },
 };
@@ -64,17 +65,19 @@ const paragraph: AbstractParagraph = {
   data: undefined,
   abstractNodes: [text1, text2, text3],
 };
-(text1 as any).parent = paragraph;
-(text2 as any).parent = paragraph;
-(text3 as any).parent = paragraph;
 
-export const defaultAbstractNode: AbstractDoc = {
+const defaultAbstractNode: AbstractDoc = {
   type: DocType.Doc,
   id: randomId(),
   data: undefined,
   abstractNodes: [paragraph],
 };
-(paragraph as any).parent = defaultAbstractNode;
+
+linkAbstractNode(defaultAbstractNode);
+
+export {
+  defaultAbstractNode,
+};
 
 // export const defaultDoc = {
 //   type: DocType.Doc,

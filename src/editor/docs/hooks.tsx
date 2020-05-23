@@ -1,6 +1,6 @@
 import React, { useRef, useEffect, useContext, useState, useMemo } from 'react';
 import { AbstractNode, AnyAbstractNode } from '../AbstractNode';
-import { documentContext } from './DocDocument';
+import { documentContext } from './EditorDocument';
 import { DocType } from '../types';
 
 export function useConnectAbstractNode<T extends Element>(abstractNode: AnyAbstractNode) {

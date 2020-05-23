@@ -5,33 +5,41 @@ import { AbstractNode, AnyAbstractNode } from "./AbstractNode";
 import { AbstractConfigs, AbstractEventType, SelectionMovePayload } from "./types";
 import { $, AbstractHelper } from './AbstractHelper';
 import { assert } from "./utils";
+import styles from './IntentSystem.module.css';
 
 export class IntentSystem {
   private helper: AbstractHelper;
   private abstractSelection: AbstractSelection;
+
+  private continuousKeyDown = 0;
 
   constructor(root: AnyAbstractNode, private configs: AbstractConfigs) {
     this.helper = $(root);
     this.abstractSelection = new AbstractSelection(root, configs);
   }
 
+  nextKeyUp(event: React.KeyboardEvent) {
+    this.continuousKeyDown = 0;
+  }
+
   nextKeyDown(event: React.KeyboardEvent) {
     const { abstractSelection, configs, helper } = this;
     const { nativeEvent } = event;
     assert(helper.current);
+    this.continuousKeyDown += 1;
 
     if (isMoveForward(nativeEvent)) {
       console.log('forward');
-      abstractSelection.forward(false, (window as any).step || 1, nativeEvent);
+      abstractSelection.forward(false, 1, nativeEvent);
     } else if (isMoveBackward(nativeEvent)) {
       console.log('backward');
-      abstractSelection.backward(false, (window as any).step || 1, nativeEvent);
+      abstractSelection.backward(false, 1, nativeEvent);
     } else if (isExtendForward(nativeEvent)) {
       console.log('extend forward');
-      abstractSelection.forward(true, (window as any).step || 1, nativeEvent);
+      abstractSelection.forward(true, 1, nativeEvent);
     } else if (isExtendBackward(nativeEvent)) {
       console.log('extend backward');
-      abstractSelection.backward(true, (window as any).step || 1, nativeEvent);
+      abstractSelection.backward(true, 1, nativeEvent);
     } else if (isBold(nativeEvent)) {
       console.log('bold');
     } else if (isItalic(nativeEvent)) {
@@ -144,6 +152,7 @@ function useIntentSystem(root: AnyAbstractNode, configs: AbstractConfigs) {
     const intentSystem = new IntentSystem(root, configs);
     return {
       nextKeyDown: intentSystem.nextKeyDown.bind(intentSystem),
+      nextKeyUp: intentSystem.nextKeyUp.bind(intentSystem),
       nextSelectionChange: intentSystem.nextSelectionChange.bind(intentSystem),
     };
   }, [configs, root]);
@@ -152,6 +161,7 @@ function useIntentSystem(root: AnyAbstractNode, configs: AbstractConfigs) {
 export function UserIntention({ root, configs, children }: IntentProps) {
   const {
     nextKeyDown,
+    nextKeyUp,
     nextSelectionChange,
   } = useIntentSystem(root, configs);
 
@@ -164,11 +174,13 @@ export function UserIntention({ root, configs, children }: IntentProps) {
 
   return (
     <div
+      className={styles.editable}
       spellCheck={false}
       contentEditable
       suppressContentEditableWarning
       style={{ outline: 'none' }}
       onKeyDown={nextKeyDown}
+      onKeyUp={nextKeyUp}
     >
       {children}
     </div>
