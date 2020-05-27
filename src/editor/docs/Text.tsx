@@ -5,7 +5,33 @@ import { useAbstractNodeData, useConnectAbstractNode, useViewData } from "./hook
 import { AbstractEvent } from '../AbstractEvent';
 import { AbstractPoint, AbstractRange } from '../AbstractSelection';
 import { $ } from '../AbstractHelper';
-import { assert } from '../utils';
+import { assert, isPartialShallowEqual, randomId } from '../utils';
+
+export function createAbstractText({
+  id = randomId(),
+  data,
+}: {
+  id?: string;
+  data: AbstractText['data'];
+}): AbstractText {
+  return {
+    type: DocType.Text,
+    id,
+    data,
+  };
+}
+
+// function tryMergeText(leftText: AbstractText, rightText: AbstractText, forward: boolean): AbstractText | [AbstractText, AbstractText] {
+//   const style1 = leftText.data.style;
+//   const style2 = rightText.data.style;
+//   if (isPartialShallowEqual(style1, style2, true)) { // incorrect shallow equal
+//     return createAbstractText({
+//       content: leftText.data.content + rightText.data.content,
+//       style: style1,
+//     });
+//   }
+//   return [leftText, rightText];
+// }
 
 function selectionSynchronize(
   this: AbstractText,
@@ -64,11 +90,9 @@ export function TextView({ context }: { context: AbstractText }) {
   const viewData = useMemo(() => ({ ref }), [ref]);
   useViewData(context, viewData);
 
-  const textContent = useMemo(() => content.replace(/ /g, '\u00a0'), [content]);
-
   return (
     <span ref={ref} style={style}>
-      {textContent}
+      {content.replace(/ /g, '\u00a0')}
     </span>
   );
 }

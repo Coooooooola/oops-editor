@@ -1,3 +1,8 @@
+.editable {
+    outline: none;
+    word-break: break-all;
+}
+
 .editable:focus ::selection {
     background-color: #bad7fb;
 }

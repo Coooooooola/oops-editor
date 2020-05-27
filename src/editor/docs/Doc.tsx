@@ -5,7 +5,7 @@ import { useNextDocViews, useConnectAbstractNode, useViewData } from "./hooks";
 import { AbstractEvent, AbstractIntentTrace } from '../AbstractEvent';
 import { AbstractRange, AbstractPoint } from '../AbstractSelection';
 
-function docSyncSelection(event: AbstractEvent<SelectionSynchronizePayload, AbstractRange>) {
+function selectionSynchronize(event: AbstractEvent<SelectionSynchronizePayload, AbstractRange>) {
   return function bubbleDocSyncSelection() {
     const selection = event.trace.selection;
     if (selection && selection.anchorPoint && selection.focusPoint) {
@@ -17,8 +17,8 @@ function docSyncSelection(event: AbstractEvent<SelectionSynchronizePayload, Abst
   };
 }
 
-function docRenderSelection(event: AbstractEvent<any, AbstractIntentTrace['windowSelection']>) {
-  return function bubbleDocRenderSelection() {
+function selectionRendering(event: AbstractEvent<any, AbstractIntentTrace['windowSelection']>) {
+  return function bubbleSelectionRendering() {
     const windowSelection = event.trace.windowSelection;
     if (
       windowSelection &&
@@ -38,8 +38,8 @@ export function DocView({ context }: { context: AbstractDoc }) {
 }
 
 const browserHooks: AbstractBrowserHooks = {
-  [AbstractEventType.SelectionSynchronize]: docSyncSelection,
-  [AbstractEventType.SelectionRendering]: docRenderSelection,
+  [AbstractEventType.SelectionSynchronize]: selectionSynchronize,
+  [AbstractEventType.SelectionRendering]: selectionRendering,
 };
 
 export const DocConfig = {

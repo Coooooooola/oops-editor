@@ -4,7 +4,7 @@ import { ListView } from "./DocViews";
 import { DocView, DocConfig } from "./docs/Doc";
 import { ListItemView } from "./docs/ListItem";
 import { ParagraphView, paragraphConfig } from "./docs/Paragraph";
-import { TextConfig } from "./docs/Text";
+import { TextConfig, createAbstractText } from "./docs/Text";
 import { linkAbstractNode } from "./AbstractNode";
 
 export const defaultEditorConfigs: EditorConfigs = {
@@ -23,9 +23,43 @@ export const defaultEditorConfigs: EditorConfigs = {
   [DocType.Text]: TextConfig,
 };
 
-const text1: AbstractText = {
-  type: DocType.Text,
-  id: randomId(),
+// const text1: AbstractText = {
+//   type: DocType.Text,
+//   id: randomId(),
+//   data: {
+//     content: '0123456789',
+//     style: {
+//       color: 'darkred',
+//       fontSize: 60,
+//     },
+//   },
+// };
+
+// const text2: AbstractText = {
+//   type: DocType.Text,
+//   id: randomId(),
+//   data: {
+//     content: '0123456789',
+//     style: {
+//       color: 'red',
+//       fontSize: 80,
+//     }
+//   },
+// };
+
+// const text3: AbstractText = {
+//   type: DocType.Text,
+//   id: randomId(),
+//   data: {
+//     content: '0123456789',
+//     style: {
+//       color: 'green',
+//       fontSize: 70,
+//     }
+//   },
+// };
+
+const text1 = createAbstractText({
   data: {
     content: '0123456789',
     style: {
@@ -33,31 +67,25 @@ const text1: AbstractText = {
       fontSize: 60,
     },
   },
-};
-
-const text2: AbstractText = {
-  type: DocType.Text,
-  id: randomId(),
+});
+const text2 = createAbstractText({
   data: {
     content: '0123456789',
     style: {
       color: 'red',
       fontSize: 80,
-    }
+    },
   },
-};
-
-const text3: AbstractText = {
-  type: DocType.Text,
-  id: randomId(),
+});
+const text3 = createAbstractText({
   data: {
     content: '0123456789',
     style: {
       color: 'green',
       fontSize: 70,
-    }
+    },
   },
-};
+});
 
 const paragraph: AbstractParagraph = {
   type: DocType.Paragraph,

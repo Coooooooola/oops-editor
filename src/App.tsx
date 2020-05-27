@@ -7,7 +7,7 @@ function App() {
   useEffect(() => {
     setTimeout(() => {
       setEditor(<Editor />);
-    }, 500);
+    }, 200);
   }, []);
 
   return editor;

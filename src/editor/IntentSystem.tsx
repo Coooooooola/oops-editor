@@ -143,6 +143,7 @@ export class IntentSystem {
 }
 
 interface IntentProps {
+  editable: boolean;
   root: AnyAbstractNode;
   configs: AbstractConfigs;
   children?: ReactNode;
@@ -159,7 +160,7 @@ function useIntentSystem(root: AnyAbstractNode, configs: AbstractConfigs) {
   }, [configs, root]);
 }
 
-export function UserIntention({ root, configs, children }: IntentProps) {
+export function UserIntention({ editable, root, configs, children }: IntentProps) {
   const {
     nextKeyDown,
     nextKeyUp,
@@ -177,9 +178,9 @@ export function UserIntention({ root, configs, children }: IntentProps) {
     <div
       className={styles.editable}
       spellCheck={false}
-      contentEditable
+      tabIndex={-1}
+      contentEditable={editable}
       suppressContentEditableWarning
-      style={{ outline: 'none' }}
       onKeyDown={nextKeyDown}
       onKeyUp={nextKeyUp}
     >
