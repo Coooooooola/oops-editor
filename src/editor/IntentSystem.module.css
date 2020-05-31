@@ -1,6 +1,5 @@
 .editable {
     outline: none;
-    word-break: break-all;
 }
 
 .editable:focus ::selection {

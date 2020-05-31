@@ -108,6 +108,7 @@ export enum AbstractEventType {
   SelectionRendering,
   SelectionMove,
   SelectionTryMove,
+  SelectionBlur,
 
   // Text
   TextStyle,
@@ -115,6 +116,8 @@ export enum AbstractEventType {
   TextDeleteBackward,
   ContentReplace,
   TextEnter,
+  TextFormatStyle,
+  TextQueryStyle,
 
   // Paragraph
 }
@@ -140,18 +143,22 @@ export interface SelectionTryMovePayload {
   forward: boolean;
 }
 
+export interface TextQueryStylePayload {
+  keys: (keyof NonNullable<AbstractText['data']['style']>)[];
+}
+
 export interface RawAbstractEvent<T = any> {
   type: AbstractEventType,
   payload: T;
 }
 
-export type AbstractHook = (this: any, abstractEvent: AbstractEvent) => void | BubbleCallback;
+export type AbstractHook = (this: any & { state: never }, abstractEvent: AbstractEvent) => void | BubbleCallback<any>;
 
 export type AbstractHooks = {
   [type in AbstractEventType]?: AbstractHook;
 }
 
-export type AbstractBrowserHook = (this: any, abstractEvent: AbstractEvent, viewData: any) => void | BubbleCallback;
+export type AbstractBrowserHook = (this: any & { state: any }, abstractEvent: AbstractEvent) => void | BubbleCallback<any>;
 
 export type AbstractBrowserHooks = {
   [type in AbstractEventType]?: AbstractBrowserHook;
@@ -172,9 +179,9 @@ export type DocConfigs = {
 
 export type EditorConfigs = AbstractConfigs & DocConfigs;
 
-export type BubbleCallback = () => void;
+export type BubbleCallback<T> = (this: T) => void;
 
-export type CaptureCallback<T extends AbstractBaseEvent> = (node: AnyAbstractNode, abstractEvent: T) => void | BubbleCallback;
+export type CaptureCallback<T extends AbstractBaseEvent, U> = (this: AnyAbstractNode, abstractEvent: T) => void | BubbleCallback<U>;
 
 export enum AbstractPosition {
   Disconnected,

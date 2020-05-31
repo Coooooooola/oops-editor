@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { AbstractNode } from "../AbstractNode";
 import { AbstractEventType, SelectionSynchronizePayload, DocType, AbstractDoc, AbstractBrowserHooks } from "../types";
-import { useNextDocViews, useConnectAbstractNode, useViewData } from "./hooks";
+import { useNextDocViews, useConnectAbstractNode, useViewState } from "./hooks";
 import { AbstractEvent, AbstractIntentTrace } from '../AbstractEvent';
 import { AbstractRange, AbstractPoint } from '../AbstractSelection';
 

@@ -4,7 +4,7 @@ import { AbstractPoint, AbstractRange } from "./AbstractSelection";
 import { AnyAbstractNode } from "./AbstractNode";
 
 export type AbstractIntentTrace = {
-  [docType in DocType]?: object;
+  [docType in DocType]?: { [key: string]: any };
 } & {
   selection?: {
     anchorPoint?: AbstractPoint,
@@ -22,6 +22,7 @@ export class AbstractEvent<P = any, R = any, E = any> extends AbstractBaseEvent<
   type: AbstractEventType;
   payload: P;
   trace: AbstractIntentTrace = {};
+  context?: any;
 
   constructor(
     root: AnyAbstractNode,
@@ -35,9 +36,5 @@ export class AbstractEvent<P = any, R = any, E = any> extends AbstractBaseEvent<
     super(root, forward, range, initiator, originEvent);
     this.type = rawEvent.type;
     this.payload = rawEvent.payload;
-  }
-
-  writeValue(subValue: Partial<AbstractIntentTrace>) {
-    this.trace = Object.assign({}, this.trace, subValue);
   }
 }

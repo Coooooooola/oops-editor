@@ -14,8 +14,14 @@ export class AbstractBaseEvent<T = any, R = any, E = Event | undefined> {
   boundary1?: AnyAbstractNode[];
   boundary2?: AnyAbstractNode[];
 
+  leftEdge = true;
+  rightEdge = true;
+
   trace?: T;
   returnValue?: R;
+
+  leftChildIndex?: number;
+  rightChildIndex?: number;
 
   constructor(
     public readonly root: AnyAbstractNode,

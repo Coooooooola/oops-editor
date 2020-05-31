@@ -1,11 +1,11 @@
-import React, { useRef, useEffect, useContext, useState, useMemo } from 'react';
+import React, { useRef, useEffect, useContext, useState, useMemo, useLayoutEffect } from 'react';
 import { AbstractNode, AnyAbstractNode } from '../AbstractNode';
 import { documentContext } from './EditorDocument';
 import { DocType } from '../types';
 
 export function useConnectAbstractNode<T extends Element>(abstractNode: AnyAbstractNode) {
   const ref = useRef<T>(null);
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (ref.current) {
       (ref.current as any).__ABSTRACT__ = abstractNode;
     }
@@ -16,7 +16,7 @@ export function useConnectAbstractNode<T extends Element>(abstractNode: AnyAbstr
 export function useNextDocViews(context: AnyAbstractNode) {
   const { configs: docConfigs } = useContext(documentContext);
   const [abstractNodes, setAbstractNodes] = useState(context.abstractNodes);
-  useEffect(() => {
+  useLayoutEffect(() => {
     context.renderAbstractNodes = setAbstractNodes;
     return () => {
       context.renderAbstractNodes = undefined;
@@ -35,7 +35,7 @@ export function useNextDocViews(context: AnyAbstractNode) {
 
 export function useAbstractNodeData<T extends AnyAbstractNode>(abstractNode: T) {
   const [data, setData] = useState<T['data']>(abstractNode.data);
-  useEffect(() => {
+  useLayoutEffect(() => {
     abstractNode.render = setData;
     return () => {
       abstractNode.render = undefined;
@@ -44,11 +44,11 @@ export function useAbstractNodeData<T extends AnyAbstractNode>(abstractNode: T) 
   return data;
 }
 
-export function useViewData<T extends AnyAbstractNode>(node: T, viewData: AnyAbstractNode['viewData']) {
-  useEffect(() => {
-    node.viewData = viewData;
+export function useViewState<T extends AnyAbstractNode>(node: T, viewData: AnyAbstractNode['state']) {
+  useLayoutEffect(() => {
+    node.state = viewData;
     return () => {
-      node.viewData = undefined;
+      node.state = undefined;
     };
   }, [node, viewData]);
 }

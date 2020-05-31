@@ -1,8 +1,10 @@
+
 import React, { useMemo } from 'react';
 import { AbstractNode } from "../AbstractNode";
-import { AbstractEventType, SelectionSynchronizePayload, DocType, AbstractParagraph, AbstractBrowserHooks } from "../types";
-import { useNextDocViews, useAbstractNodeData, useConnectAbstractNode, useViewData } from "./hooks";
+import { AbstractEventType, SelectionSynchronizePayload, DocType, AbstractParagraph, AbstractBrowserHooks, EditorConfigs } from "../types";
+import { useNextDocViews, useAbstractNodeData, useConnectAbstractNode, useViewState } from "./hooks";
 import { AbstractEvent } from '../AbstractEvent';
+import { assert } from '../utils';
 
 function paragraphSyncSelection(
   this: AbstractParagraph,
@@ -29,8 +31,39 @@ const browserHooks: AbstractBrowserHooks = {
   [AbstractEventType.SelectionSynchronize]: paragraphSyncSelection,
 };
 
-export const paragraphConfig = {
+function contentReplace(
+  this: AbstractParagraph,
+  event: AbstractEvent,
+) {
+  const { context } = event;
+  return function bubble(this: AbstractParagraph) {
+    assert(context);
+    context.replace();
+    if (this.abstractNodes) {
+      context.parentContext.push(this);
+    }
+  };
+}
+
+function textFormatStyle(
+  this: AbstractParagraph,
+  event: AbstractEvent,
+) {
+  const { context } = event;
+  return function bubble(this: AbstractParagraph) {
+    assert(context);
+    context.replace();
+    if (this.abstractNodes) {
+      context.parentContext.push(this);
+    }
+  };
+}
+
+export const paragraphConfig: EditorConfigs[DocType.Paragraph] = {
   View: ParagraphView,
-  hooks: {},
+  hooks: {
+    [AbstractEventType.ContentReplace]: contentReplace,
+    [AbstractEventType.TextFormatStyle]: textFormatStyle,
+  },
   browserHooks,
 };

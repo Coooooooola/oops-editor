@@ -1,5 +1,5 @@
-import { DocType, CaptureCallback, BubbleCallback, Writable, NonEmptyArray } from "./types";
-import { isPartialShallowEqual, assert, getAbstractNodePath } from "./utils";
+import { DocType, CaptureCallback, BubbleCallback, Writable, NonEmptyArray, AbstractPosition } from "./types";
+import { isPartialShallowEqual, assert, getAbstractNodePath, compareAbstractPosition } from "./utils";
 import { AbstractEvent } from "./AbstractEvent";
 import { AbstractBaseEvent } from "./AbstractBaseEvent";
 
@@ -22,7 +22,7 @@ export interface AbstractNode<
   render?(data: T): void;
   renderAbstractNodes?(abstractNodes?: P): void;
 
-  viewData?: U;
+  state?: U;
 
   batch?: {
     data?: T;
@@ -64,21 +64,38 @@ export function linkAbstractNode(root: AnyAbstractNode) {
 //   } as T;
 // }
 
-export function abstractUpdate<T extends AbstractNode<DocType>>(writableNode: Writable<T>, partialData?: Partial<T['data']>) {
-  if (!isPartialShallowEqual(partialData, writableNode.data)) {
-    writableNode.data = partialData === undefined ? undefined : Object.assign({}, writableNode.data, partialData);
+type NextData<T extends AbstractNode<DocType>> = T['data'] | ((prevData: T['data']) => T['data']) | undefined;
+
+export function abstractUpdate<T extends AbstractNode<DocType>>(writableNode: Writable<T>, nextData: NextData<T>) {
+  const finalNextData = typeof nextData === 'function' ? nextData(writableNode.data) as T['data'] : nextData;
+  if (!isPartialShallowEqual(finalNextData, writableNode.data, true)) {
+    writableNode.data = finalNextData;
     if (writableNode.render) {
-      writableNode.render(writableNode.data);
+      writableNode.render(finalNextData);
     }
   }
 }
 
-export function abstractUpdateAbstractNodes<T extends AbstractNode<DocType>>(writableNode: Writable<T>, abstractNodes: T['abstractNodes']) {
-  if (writableNode.abstractNodes !== abstractNodes) {
-    writableNode.abstractNodes = abstractNodes;
-    if (writableNode.renderAbstractNodes) {
-      writableNode.renderAbstractNodes(abstractNodes);
-    }
+export function abstractSplice(node: Writable<AnyAbstractNode>, start: number, deleteCount: number, items: Writable<AnyAbstractNode>[]) {
+  const { abstractNodes, renderAbstractNodes } = node;
+  assert(abstractNodes);
+
+  if (
+    deleteCount === items.length &&
+    items.every((item, index) => item === abstractNodes[start + index])
+  ) {
+    return;
+  }
+
+  const nextAbstractNodes = abstractNodes.slice() as typeof abstractNodes;
+  nextAbstractNodes.splice(start, deleteCount, ...items);
+  // for (const item of items) {
+  //   item.parent = node;
+  // }
+  node.abstractNodes = nextAbstractNodes.length ? nextAbstractNodes : undefined;
+
+  if (renderAbstractNodes) {
+    renderAbstractNodes(node.abstractNodes);
   }
 }
 
@@ -192,7 +209,7 @@ export function abstractUpdateAbstractNodes<T extends AbstractNode<DocType>>(wri
 // }
 
 export function traverseAbstractNodesRecursively<T extends AbstractBaseEvent>(
-  captureCallback: CaptureCallback<T>,
+  captureCallback: CaptureCallback<T, AnyAbstractNode>,
   event: T,
   node: AnyAbstractNode,
   forward: boolean,
@@ -202,67 +219,86 @@ export function traverseAbstractNodesRecursively<T extends AbstractBaseEvent>(
 ) {
   event.depth = depth;
   const currentIndex = event.index;
-
-  const bubbleCallback = captureCallback(node, event);
   const { abstractNodes } = node;
 
+  const { leftEdge, rightEdge } = event;
+
+  let start: number | undefined;
+  let end: number | undefined;
+  const nextDepth = depth + 1;
+
   if (event.propagating && !event.bailed && abstractNodes) {
-    const nextDepth = depth + 1;
     const node1 = boundary1 && nextDepth < boundary1.length && boundary1[nextDepth];
     const node2 = boundary2 && nextDepth < boundary2.length && boundary2[nextDepth];
 
-    if (node1 && node1 === node2) {
-      event.index = -2;
+    start = node1
+      ? abstractNodes.indexOf(node1)
+      : forward ? 0 : abstractNodes.length - 1;
+    assert(start !== -1);
+
+    end = node2
+      ? (forward ? abstractNodes.indexOf(node2, start) : abstractNodes.lastIndexOf(node2, start))
+      : (forward ? abstractNodes.length - 1 : 0);
+    assert(end !== -1);
+
+    assert(forward ? start <= end : end <= start);
+  }
+
+  event.leftEdge = leftEdge;
+  event.rightEdge = rightEdge;
+  const leftIndex = forward ? start : end;
+  const rightIndex = forward ? end : start;
+  event.leftChildIndex = leftIndex;
+  event.rightChildIndex = rightIndex;
+  const bubbleCallback = captureCallback.call(node, event);
+
+  if (start !== undefined && end !== undefined) {
+    assert(abstractNodes);
+    const leftEdgeIndex = event.leftEdge && (forward ? start : end);
+    const rightEdgeIndex = event.rightEdge && (forward ? end : start);
+
+    for (
+      let i = start;
+      !event.bailed && (forward ? i <= end : i >= end);
+      i = forward ? i + 1 : i - 1
+    ) {
+      assert(abstractNodes[i].parent);
+      event.index = i;
+      if (i === leftEdgeIndex) {
+        event.leftEdge = true;
+      } else if (event.leftEdge) {
+        event.leftEdge = false;
+      }
+      if (i === rightEdgeIndex) {
+        event.leftEdge = true;
+      } else if (event.rightEdge) {
+        event.rightEdge = false;
+      }
+
       traverseAbstractNodesRecursively(
         captureCallback,
         event,
-        node1,
+        abstractNodes[i],
         forward,
         nextDepth,
-        boundary1,
-        boundary2,
+        i === start ? boundary1 : undefined,
+        i === end ? boundary2 : undefined,
       );
-    } else {
-      const start = node1
-        ? abstractNodes.indexOf(node1)
-        : forward ? 0 : abstractNodes.length - 1;
-      assert(start !== -1);
-
-      const end = node2
-        ? (forward ? abstractNodes.indexOf(node2, start) : abstractNodes.lastIndexOf(node2, start))
-        : (forward ? abstractNodes.length - 1 : 0);
-      assert(end !== -1);
-  
-      for (
-        let i = start;
-        !event.bailed && (forward ? i <= end : i >= end);
-        i = forward ? i + 1 : i - 1
-      ) {
-        assert(abstractNodes[i].parent);
-        event.index = i;
-        traverseAbstractNodesRecursively(
-          captureCallback,
-          event,
-          abstractNodes[i],
-          forward,
-          nextDepth,
-          i === start ? boundary1 : undefined,
-          i === end ? boundary2 : undefined,
-        );
-      }
     }
   }
 
+  event.leftChildIndex = leftIndex;
+  event.rightChildIndex = rightIndex;
   event.depth = depth;
   event.index = currentIndex;
   if (bubbleCallback) {
-    bubbleCallback();
+    bubbleCallback.call(node);
   }
   event.propagating = true;
 }
 
 export function traverseAbstractNodes<T extends AbstractBaseEvent = AbstractBaseEvent>(
-  captureCallback: CaptureCallback<T>,
+  captureCallback: CaptureCallback<T, AnyAbstractNode>,
   origin: AnyAbstractNode,
   event: T,
   arg1?: AnyAbstractNode[] | AnyAbstractNode,
@@ -274,8 +310,23 @@ export function traverseAbstractNodes<T extends AbstractBaseEvent = AbstractBase
   );
   assert(!boundary1 || boundary1[0] === origin);
   assert(!boundary2 || boundary2[0] === origin);
-  event.boundary1 = boundary1;
-  event.boundary2 = boundary2;
+
+  let finalBoundary1 = boundary1;
+  let finalBoundary2 = boundary2;
+  if (boundary1 && boundary2) {
+    const position = compareAbstractPosition(
+      boundary1[boundary1.length - 1],
+      boundary2[boundary2.length - 1],
+    );
+    if (
+      (position === AbstractPosition.Following && !event.forward) ||
+      (position === AbstractPosition.Preceding && event.forward)
+    ) {
+      [finalBoundary2, finalBoundary1] = [finalBoundary1, finalBoundary2];
+    }
+  }
+  event.boundary1 = finalBoundary1;
+  event.boundary2 = finalBoundary2;
 
   traverseAbstractNodesRecursively(
     captureCallback,
@@ -283,7 +334,7 @@ export function traverseAbstractNodes<T extends AbstractBaseEvent = AbstractBase
     origin,
     event.forward,
     0,
-    boundary1,
-    boundary2,
+    finalBoundary1,
+    finalBoundary2,
   );
 }

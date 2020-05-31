@@ -114,3 +114,14 @@ export function compareAbstractPosition(node1: AnyAbstractNode, node2: AnyAbstra
   }
   return path1.length <= path2.length ? AbstractPosition.ContainedBy : AbstractPosition.Contains;
 }
+
+export function pick<T extends { [key: string]: any }>(object: T, keys: (keyof T)[], withoutUndefined = false) {
+  const ret: Partial<T> = {};
+  for (const key of keys) {
+    const value = object[key];
+    if (!withoutUndefined || value !== undefined) {
+      ret[key] = object[key];
+    }
+  }
+  return ret;
+}

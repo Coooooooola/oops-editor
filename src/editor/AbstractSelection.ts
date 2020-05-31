@@ -133,18 +133,16 @@ export class AbstractSelection {
       });
 
       if (selection) {
-        const { anchorNode, anchorOffset, focusNode, focusOffset } = windowSelection;
+        const { anchorNode, anchorOffset, focusNode, focusOffset } = selection;
+        assert(anchorNode && anchorOffset != null && focusNode && focusOffset != null);
         if (
-          anchorNode !== selection.anchorNode ||
-          anchorOffset !== selection.anchorOffset
+          anchorNode !== windowSelection.anchorNode ||
+          anchorOffset !== windowSelection.anchorOffset ||
+          focusNode !== windowSelection.focusNode ||
+          focusOffset !== windowSelection.focusOffset
         ) {
-          windowSelection.collapse(selection.anchorNode!, selection.anchorOffset);
-        }
-        if (
-          focusNode !== selection.focusNode ||
-          focusOffset !== selection.focusOffset
-        ) {
-          windowSelection.extend(selection.focusNode!, selection.focusOffset!);
+          windowSelection.collapse(anchorNode, anchorOffset);
+          windowSelection.extend(focusNode, focusOffset);
         }
         return;
       }

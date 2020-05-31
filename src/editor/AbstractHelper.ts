@@ -1,4 +1,4 @@
-import { RawAbstractEvent, DocType, AbstractConfigs, AbstractHook, AbstractBrowserHook } from "./types";
+import { RawAbstractEvent, DocType, AbstractConfigs, AbstractHook, AbstractBrowserHook, AbstractEventType, CaptureCallback } from "./types";
 import { AnyAbstractNode, traverseAbstractNodes, AbstractNode } from "./AbstractNode";
 import { AbstractBaseEvent } from './AbstractBaseEvent';
 import { assert } from "./utils";
@@ -42,10 +42,10 @@ function findAbstractNode(
   forward: boolean,
 ): { node: AnyAbstractNode, index: number } | null {
   let ret: { node: AnyAbstractNode, index: number } | null = null;
-  function captureCallback(node: AnyAbstractNode, event: AbstractBaseEvent) {
-    switch (selector(node)) {
+  function captureCallback(this: AnyAbstractNode, event: AbstractBaseEvent) {
+    switch (selector(this)) {
       case SelectorResult.Succuss:
-        ret = { node, index: event.index };
+        ret = { node: this, index: event.index };
       case SelectorResult.Bail:
         event.bail();
     }
@@ -68,6 +68,23 @@ export interface IntentDetails {
   point2?: AnyAbstractNode;
   boundary1?: AnyAbstractNode[];
   boundary2?: AnyAbstractNode[];
+
+  createCaptureCallback?(this: AnyAbstractNode, interestHooks: any): CaptureCallback<AbstractEvent, AnyAbstractNode>;
+}
+
+function defaultCreateCaptureCallback(interestHooks: any) {
+  return function captureCallback(this: AnyAbstractNode, event: AbstractEvent) {
+    const value = interestHooks[this.type]
+    if (value) {
+      const { hook, browserHook } = value;
+      const bubble1 = hook && hook.call(this, event);
+      const bubble2 = browserHook && browserHook.call(this, event, this.state);
+      return bubble1 && bubble2 ? function bubbleCallback() {
+        bubble2();
+        bubble1();
+      } : bubble1 || bubble2 || undefined;
+    }
+  };
 }
 
 export class AbstractHelper {
@@ -78,6 +95,7 @@ export class AbstractHelper {
     private index: number = -1,
   ) {
     const _parent = current?.parent || null;
+    this._parent = _parent;
     assert(index >= -1);
     if (index !== -1) {
       assert(
@@ -86,7 +104,6 @@ export class AbstractHelper {
         index < _parent.abstractNodes.length &&
         this.current === _parent.abstractNodes[index]
       );
-      this._parent = _parent;
     }
   }
 
@@ -97,7 +114,7 @@ export class AbstractHelper {
       assert(current && _parent.abstractNodes);
       if (_parent.abstractNodes[_index] !== current) {
         this.index = _parent.abstractNodes.indexOf(current);
-        assert(_index !== -1);
+        assert(this.index !== -1);
       }
     } else {
       this.index = -1;
@@ -114,7 +131,7 @@ export class AbstractHelper {
 
   dispatchEvent<T, P = any>(
     rawEvent: RawAbstractEvent<P>,
-    { initiator, range, forward, point1, point2, boundary1, boundary2, configs, originEvent }: IntentDetails,
+    { initiator, range, forward, point1, point2, boundary1, boundary2, configs, originEvent, createCaptureCallback }: IntentDetails,
   ): T | undefined {
     const { current } = this;
     if (!current) {
@@ -122,27 +139,16 @@ export class AbstractHelper {
     }
 
     const interestHooks: any = {};
-    for (const [key, value] of Object.entries(configs)) {
-      const hook = value.hooks[rawEvent.type];
-      const browserHooks = value.browserHooks[rawEvent.type];
-      if (hook || browserHooks) {
-        interestHooks[key] = { hook, browserHooks };
+    for (const [key, { hooks, browserHooks }] of Object.entries(configs)) {
+      const hook = hooks[rawEvent.type];
+      const browserHook = browserHooks[rawEvent.type];
+      if (hook || browserHook) {
+        interestHooks[key] = { hook, browserHook };
       }
     }
+    const captureCallback = (createCaptureCallback || defaultCreateCaptureCallback)(interestHooks);
 
     const abstractEvent = new AbstractEvent<P, T>(current, rawEvent, forward, configs, range, initiator, originEvent);
-    function captureCallback(node: AnyAbstractNode) {
-      const value = interestHooks[node.type]
-      if (value) {
-        const { hook, browserHooks } = value;
-        const bubble1 = hook && hook.call(node, abstractEvent);
-        const bubble2 = browserHooks && browserHooks.call(node, abstractEvent, node.viewData);
-        return bubble1 && bubble2 ? function bubbleCallback() {
-          bubble2();
-          bubble1();
-        } : bubble1 || bubble2 || undefined;
-      }
-    }
 
     traverseAbstractNodes(captureCallback, current, abstractEvent, boundary1 || point1, boundary2 || point2);
     return abstractEvent.returnValue;
@@ -201,17 +207,18 @@ export class AbstractHelper {
   nextSibling(...docTypes: DocType[]): AbstractHelper;
   nextSibling(selector?: AbstractSelector): AbstractHelper;
   nextSibling(arg0?: AbstractSelector | DocType, ...args: DocType[]): AbstractHelper {
-    const { current, _parent } = this;
+    const { current } = this;
     if (!current) {
       return this;
     }
+    const selector = this.prepare(true, arg0, ...args);
+    const { _parent } = this;
     if (_parent) {
-      const selector = this.prepare(true, arg0, ...args);
       assert(_parent.abstractNodes);
       for (let i = this.index + 1; i < _parent.abstractNodes.length; i++) {
         const candidate = _parent.abstractNodes[i];
         if (selector(candidate)) {
-          return new AbstractHelper(candidate, this.index);
+          return new AbstractHelper(candidate, i);
         }
       }
     }
@@ -221,17 +228,18 @@ export class AbstractHelper {
   prevSibling(...docTypes: DocType[]): AbstractHelper;
   prevSibling(selector?: AbstractSelector): AbstractHelper;
   prevSibling(arg0?: AbstractSelector | DocType, ...args: DocType[]): AbstractHelper {
-    const { current, _parent } = this;
+    const { current } = this;
     if (!current) {
       return this;
     }
+    const selector = this.prepare(true, arg0, ...args);
+    const { _parent } = this;
     if (_parent) {
-      const selector = this.prepare(true, arg0, ...args);
       assert(_parent.abstractNodes);
       for (let i = this.index - 1; i >= 0; i++) {
         const candidate = _parent.abstractNodes[i];
         if (selector(candidate)) {
-          return new AbstractHelper(candidate, this.index);
+          return new AbstractHelper(candidate, i);
         }
       }
     }
@@ -245,8 +253,8 @@ export class AbstractHelper {
     if (!current) {
       return this;
     }
+    const selector = this.prepare(true, arg0, ...args);
     if (_parent) {
-      const selector = this.prepare(true, arg0, ...args);
       assert(_parent.abstractNodes);
       for (let i = this.index + 1; i < _parent.abstractNodes.length; i++) {
         const node = _parent.abstractNodes[i];
