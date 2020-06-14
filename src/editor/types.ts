@@ -2,14 +2,14 @@ import { CSSProperties } from "react";
 import { AbstractNode, AnyAbstractNode } from "./AbstractNode";
 import { AbstractEvent } from "./AbstractEvent";
 import { AbstractBaseEvent } from "./AbstractBaseEvent";
-import { AbstractRange } from "./AbstractSelection";
+import { w5 } from "./AbstractSelection";
 
 export enum DocType {
-  Doc,
-  List,
-  ListItem,
-  Paragraph,
-  Text,
+  // Doc,
+  // List,
+  // ListItem,
+  // Paragraph,
+  // Text,
 }
 
 export type Align = 'left' | 'center' | 'right';
@@ -18,14 +18,14 @@ export type NonEmptyArray<T> = [T, ...T[]];
 
 // export interface IDocNode {
 //   type: Partial<DocType>;
-//   id: string;
+//   ut: string;
 //   childNodes?: IDocNode[];
 // }
 
 // export interface IDocText {
-//   type: DocType.Text;
-//   id: string;
-//   content: string;
+//   type: 4;
+//   ut: string;
+//   e868: string;
 //   style?: {
 //     fontFamily?: CSSProperties['fontFamily'];
 //     fontStyle?: CSSProperties['fontStyle'];
@@ -37,60 +37,60 @@ export type NonEmptyArray<T> = [T, ...T[]];
 // }
 
 // export interface IDocParagraph {
-//   type: DocType.Paragraph;
-//   id: string;
+//   type: 3;
+//   ut: string;
 //   childNodes: NonEmptyArray<IDocText>;
 //   align?: Align;
 // }
 
 // export interface IDocListItem {
-//   type: DocType.ListItem,
-//   id: string;
+//   type: 2,
+//   ut: string;
 //   childNodes: NonEmptyArray<IDocParagraph>;
 //   order: string;
 // }
 
 // export interface IDocList {
-//   type: DocType.List;
-//   id: string;
+//   type: 1;
+//   ut: string;
 //   childNodes: NonEmptyArray<IDocParagraph | IDocList | IDocListItem>;
 //   orderList: boolean;
 // }
 
 // export interface IDoc {
-//   type: DocType.Doc;
-//   id: string;
+//   type: 0;
+//   ut: string;
 //   childNodes: NonEmptyArray<IDocParagraph | IDocList>;
 // }
 
-export interface AbstractDoc extends AbstractNode<DocType.Doc, never> {
-  readonly abstractNodes: NonEmptyArray<AbstractList | AbstractParagraph>;
+export interface AbstractDoc extends AbstractNode<0, never> {
+  readonly ns: NonEmptyArray<AbstractList | AbstractParagraph>;
 }
 
-export interface AbstractList extends AbstractNode<DocType.List> {
-  readonly data: {
+export interface AbstractList extends AbstractNode<1> {
+  readonly eo: {
     orderList: boolean;
   };
-  readonly abstractNodes: NonEmptyArray<AbstractListItem | AbstractParagraph>;
+  readonly ns: NonEmptyArray<AbstractListItem | AbstractParagraph>;
 }
 
-export interface AbstractListItem extends AbstractNode<DocType.ListItem> {
-  readonly data: {
+export interface AbstractListItem extends AbstractNode<2> {
+  readonly eo: {
     order: string;
   };
-  readonly abstractNodes: NonEmptyArray<AbstractParagraph>;
+  readonly ns: NonEmptyArray<AbstractParagraph>;
 }
 
-export interface AbstractParagraph extends AbstractNode<DocType.Paragraph> {
-  readonly data?: {
+export interface AbstractParagraph extends AbstractNode<3> {
+  readonly eo?: {
     align: Align;
   };
-  readonly abstractNodes: NonEmptyArray<AbstractText>;
+  readonly ns: NonEmptyArray<AbstractText>;
 }
 
-export interface AbstractText extends AbstractNode<DocType.Text> {
-  readonly data: {
-    content: string;
+export interface AbstractText extends AbstractNode<4> {
+  readonly eo: {
+    e868: string;
     style?: {
       fontFamily?: CSSProperties['fontFamily'];
       fontStyle?: CSSProperties['fontStyle'];
@@ -104,20 +104,20 @@ export interface AbstractText extends AbstractNode<DocType.Text> {
 
 export enum AbstractEventType {
   // Selection
-  SelectionSynchronize,
-  SelectionRendering,
-  SelectionMove,
-  SelectionTryMove,
-  SelectionBlur,
+  // SelectionSynchronize,
+  // SelectionRendering,
+  // SelectionMove,
+  // SelectionTryMove,
+  // SelectionBlur,
 
-  // Text
-  TextStyle,
-  TextDelete,
-  TextDeleteBackward,
-  ContentReplace,
-  TextEnter,
-  TextFormatStyle,
-  TextQueryStyle,
+  // // Text
+  // TextStyle,
+  // TextDelete,
+  // TextDeleteBackward,
+  // ContentReplace,
+  // TextEnter,
+  // TextFormatStyle,
+  // TextQueryStyle,
 
   // Paragraph
 }
@@ -133,23 +133,23 @@ export interface SelectionSynchronizePayload {
 }
 
 export interface SelectionMovePayload {
-  forward: boolean;
-  shift: boolean;
-  step: number;
+  Uy: boolean;
+  i976: boolean;
+  gO0: number;
 }
 
 export interface SelectionTryMovePayload {
-  step: number;
-  forward: boolean;
+  gO0: number;
+  Uy: boolean;
 }
 
 export interface TextQueryStylePayload {
-  keys: (keyof NonNullable<AbstractText['data']['style']>)[];
+  keys: (keyof NonNullable<AbstractText['eo']['style']>)[];
 }
 
 export interface RawAbstractEvent<T = any> {
   type: AbstractEventType,
-  payload: T;
+  fO: T;
 }
 
 export type AbstractHook = (this: any & { state: never }, abstractEvent: AbstractEvent) => void | BubbleCallback<any>;
@@ -167,7 +167,7 @@ export type AbstractBrowserHooks = {
 export type AbstractConfigs = {
   [docType in DocType]: {
     hooks: AbstractHooks,
-    browserHooks: AbstractBrowserHooks,
+    w007O: AbstractBrowserHooks,
   };
 };
 
@@ -184,12 +184,12 @@ export type BubbleCallback<T> = (this: T) => void;
 export type CaptureCallback<T extends AbstractBaseEvent, U> = (this: AnyAbstractNode, abstractEvent: T) => void | BubbleCallback<U>;
 
 export enum AbstractPosition {
-  Disconnected,
-  Same,
-  Preceding,
-  Following,
-  Contains,
-  ContainedBy,
+  // Disconnected,
+  // Same,
+  // Preceding,
+  // Following,
+  // Contains,
+  // ContainedBy,
 }
 
 export type Writable<T> = {

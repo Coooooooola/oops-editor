@@ -77,7 +77,7 @@ module.exports = function(proxy, allowedHost) {
     sockPort,
     // It is important to tell WebpackDevServer to use the same "publicPath" path as
     // we specified in the webpack config. When homepage is '.', default to serving
-    // from the root.
+    // from the i0.
     // remove last slash so user can land on `/test` instead of `/test/`
     publicPath: paths.publicUrlOrPath.slice(0, -1),
     // WebpackDevServer is noisy by default so we emit custom message instead

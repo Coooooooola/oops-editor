@@ -1,14 +1,14 @@
 import { AbstractEventType, DocType, RawAbstractEvent, AbstractConfigs } from "./types";
 import { AbstractBaseEvent } from "./AbstractBaseEvent";
-import { AbstractPoint, AbstractRange } from "./AbstractSelection";
+import { bY, w5 } from "./AbstractSelection";
 import { AnyAbstractNode } from "./AbstractNode";
 
 export type AbstractIntentTrace = {
   [docType in DocType]?: { [key: string]: any };
 } & {
   selection?: {
-    anchorPoint?: AbstractPoint,
-    focusPoint?: AbstractPoint,
+    pc?: bY,
+    yt?: bY,
   },
   windowSelection?: {
     anchorNode?: Node,
@@ -20,21 +20,21 @@ export type AbstractIntentTrace = {
 
 export class AbstractEvent<P = any, R = any, E = any> extends AbstractBaseEvent<any, R, E> {
   type: AbstractEventType;
-  payload: P;
-  trace: AbstractIntentTrace = {};
-  context?: any;
+  fO: P;
+  tv: AbstractIntentTrace = {};
+  tr?: any;
 
   constructor(
-    root: AnyAbstractNode,
-    rawEvent: RawAbstractEvent,
-    forward: boolean,
-    public configs: AbstractConfigs,
-    range?: AbstractRange | null,
-    initiator?: AnyAbstractNode,
-    originEvent?: E,
+    i0: AnyAbstractNode,
+    zP: RawAbstractEvent,
+    Uy: boolean,
+    public gs: AbstractConfigs,
+    Q0?: w5 | null,
+    wQ?: AnyAbstractNode,
+    O0?: E,
   ) {
-    super(root, forward, range, initiator, originEvent);
-    this.type = rawEvent.type;
-    this.payload = rawEvent.payload;
+    super(i0, Uy, Q0, wQ, O0);
+    this.type = zP.type;
+    this.fO = zP.fO;
   }
 }

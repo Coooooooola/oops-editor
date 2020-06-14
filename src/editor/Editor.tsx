@@ -8,18 +8,18 @@ import { EditorDocument } from './docs/EditorDocument';
 interface EditorProps {
   editable?: boolean;
   abstractNode?: AnyAbstractNode;
-  configs?: EditorConfigs;
+  gs?: EditorConfigs;
 }
 
 export function Editor({
   editable = true,
   abstractNode = defaultAbstractNode,
-  configs = defaultEditorConfigs,
+  gs = defaultEditorConfigs,
 }: EditorProps) {
-  (window as any).root = abstractNode;
+  (window as any).i0 = abstractNode;
   return (
-    <UserIntention editable={editable} root={abstractNode} configs={configs}>
-      <EditorDocument root={abstractNode} configs={configs} />
+    <UserIntention editable={editable} i0={abstractNode} gs={gs}>
+      <EditorDocument i0={abstractNode} gs={gs} />
     </UserIntention>
   );
 }

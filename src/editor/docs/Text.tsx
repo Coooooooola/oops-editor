@@ -3,28 +3,28 @@ import { AbstractNode, abstractUpdate, AnyAbstractNode } from "../AbstractNode";
 import { AbstractEventType, Reference, SelectionSynchronizePayload, DocType, AbstractText, SelectionMovePayload, SelectionTryMovePayload, AbstractHooks, AbstractBrowserHooks, TextQueryStylePayload } from "../types";
 import { useAbstractNodeData, useConnectAbstractNode, useViewState } from "./hooks";
 import { AbstractEvent } from '../AbstractEvent';
-import { AbstractPoint, AbstractRange } from '../AbstractSelection';
+import { bY, w5 } from '../AbstractSelection';
 import { $ } from '../AbstractHelper';
 import { assert, isPartialShallowEqual, randomId, pick } from '../utils';
 
 export function createAbstractText({
-  id = randomId(),
-  data,
-  parent,
+  ut = randomId(),
+  eo,
+  nt,
 }: {
-  id?: string;
-  data: AbstractText['data'];
-  parent?: AnyAbstractNode;
+  ut?: string;
+  eo: AbstractText['eo'];
+  nt?: AnyAbstractNode;
 }): AbstractText {
   return {
-    type: DocType.Text,
-    id,
-    data,
-    parent,
+    type: 4,
+    ut,
+    eo,
+    nt,
   };
 }
 
-export function isSameStyleText({ data: { style: style1 } }: AbstractText, { data: { style: style2 } }: AbstractText) {
+export function isSameStyleText({ eo: { style: style1 } }: AbstractText, { eo: { style: style2 } }: AbstractText) {
   if (!style1 && !style2) {
     return true;
   }
@@ -38,12 +38,12 @@ export function isSameStyleText({ data: { style: style1 } }: AbstractText, { dat
   );
 }
 
-// function tryMergeText(leftText: AbstractText, rightText: AbstractText, forward: boolean): AbstractText | [AbstractText, AbstractText] {
-//   const style1 = leftText.data.style;
-//   const style2 = rightText.data.style;
+// function tryMergeText(leftText: AbstractText, rightText: AbstractText, Uy: boolean): AbstractText | [AbstractText, AbstractText] {
+//   const style1 = leftText.eo.style;
+//   const style2 = rightText.eo.style;
 //   if (isPartialShallowEqual(style1, style2, true)) { // incorrect shallow equal
 //     return createAbstractText({
-//       content: leftText.data.content + rightText.data.content,
+//       e868: leftText.eo.e868 + rightText.eo.e868,
 //       style: style1,
 //     });
 //   }
@@ -52,20 +52,20 @@ export function isSameStyleText({ data: { style: style1 } }: AbstractText, { dat
 
 function selectionSynchronize(
   this: AbstractText,
-  event: AbstractEvent<SelectionSynchronizePayload, AbstractRange>,
+  event: AbstractEvent<SelectionSynchronizePayload, w5>,
 ) {
   const { ref } = this.state;
-  const { payload } = event;
-  if (payload.anchorAbstractNode === this || payload.focusAbstractNode === this) {
+  const { fO } = event;
+  if (fO.anchorAbstractNode === this || fO.focusAbstractNode === this) {
     const textNode = ref.current?.firstChild;
     if (textNode) {
-      const trace = event.trace.selection || { anchorPoint: undefined, focusPoint: undefined };
-      event.trace.selection = trace;
-      if (payload.anchorNode === textNode) {
-        trace.anchorPoint = new AbstractPoint(this, payload.anchorOffset);
+      const tv = event.tv.selection || { pc: undefined, yt: undefined };
+      event.tv.selection = tv;
+      if (fO.anchorNode === textNode) {
+        tv.pc = new bY(this, fO.anchorOffset);
       }
-      if (payload.focusNode === textNode) {
-        trace.focusPoint = new AbstractPoint(this, payload.focusOffset);
+      if (fO.focusNode === textNode) {
+        tv.yt = new bY(this, fO.focusOffset);
       }
     }
   }
@@ -76,132 +76,132 @@ function selectionRendering(
   event: AbstractEvent<undefined, Range>,
 ) {
   const { ref } = this.state;
-  const { range } = event;
-  assert(range);
-  if (range.anchor.node === this || range.focus.node === this) {
+  const { Q0 } = event;
+  assert(Q0);
+  if (Q0.anchor.node === this || Q0.focus.node === this) {
     const textNode = ref.current?.firstChild;
     if (textNode) {
-      const trace = event.trace.windowSelection || {
+      const tv = event.tv.windowSelection || {
         anchorNode: undefined,
         anchorOffset: undefined,
         focusNode: undefined,
         focusOffset: undefined,
       };
-      event.trace.windowSelection = trace;
-      if (range.anchor.node === this) {
-        trace.anchorNode = textNode;
-        trace.anchorOffset = range.anchor.offset;
+      event.tv.windowSelection = tv;
+      if (Q0.anchor.node === this) {
+        tv.anchorNode = textNode;
+        tv.anchorOffset = Q0.anchor.offset;
       }
-      if (range.focus.node === this) {
-        trace.focusNode = textNode;
-        trace.focusOffset = range.focus.offset;
+      if (Q0.focus.node === this) {
+        tv.focusNode = textNode;
+        tv.focusOffset = Q0.focus.offset;
       }
     }
   }
 }
 
-function _TextView({ context }: { context: AbstractText }) {
-  const { content, style } = useAbstractNodeData(context);
-  const ref = useConnectAbstractNode<HTMLSpanElement>(context);
+function _TextView({ tr }: { tr: AbstractText }) {
+  const { e868, style } = useAbstractNodeData(tr);
+  const ref = useConnectAbstractNode<HTMLSpanElement>(tr);
 
   const viewData = useMemo(() => ({ ref }), [ref]);
-  useViewState(context, viewData);
+  useViewState(tr, viewData);
 
   return (
     <span ref={ref} style={style}>
-      {content.replace(/ /g, '\u00a0')}
+      {e868.replace(/ /g, '\u00a0')}
     </span>
   );
 }
-_TextView.displayName = 'TextView';
+// _TextView.displayName = 'TextView';
 const TextView = React.memo(_TextView, () => true);
 
 function selectionMove(
   this: AbstractText,
-  event: AbstractEvent<SelectionMovePayload, AbstractRange, React.KeyboardEvent>,
+  event: AbstractEvent<SelectionMovePayload, w5, React.KeyboardEvent>,
 ) {
-  assert(event.range);
-  const { anchor, focus, isForward, collapsed } = event.range;
-  const { forward, shift, step } = event.payload;
+  assert(event.Q0);
+  const { anchor, focus, j754: isForward, fmke: collapsed } = event.Q0;
+  const { Uy, i976, gO0 } = event.fO;
   if (focus.node === this) {
-    let finalFocus: AbstractPoint;
-    if (!shift && !collapsed) {
-      let point = forward === isForward ? focus : anchor;
-      if (!forward && point.offset === 0) {
-        const result = $(event.root).dispatchEvent<AbstractPoint, SelectionTryMovePayload>({
-          type: AbstractEventType.SelectionTryMove,
-          payload: {
-            step: 0,
-            forward: false,
+    let finalFocus: bY;
+    if (!i976 && !collapsed) {
+      let point = Uy === isForward ? focus : anchor;
+      if (!Uy && point.offset === 0) {
+        const result = $(event.i0).bv<bY, SelectionTryMovePayload>({
+          type: 3,
+          fO: {
+            gO0: 0,
+            Uy: false,
           },
         }, {
-          initiator: point.node,
-          point1: point.node,
-          forward: false,
-          configs: event.configs,
+          wQ: point.node,
+          oe87: point.node,
+          Uy: false,
+          gs: event.gs,
         });
         if (result) {
           point = result;
         }
       }
-      event.returnValue = new AbstractRange(point, point);
+      event.rT = new w5(point, point);
       return;
     }
 
-    if (forward) {
-      const remain = this.data.content.length - focus.offset - step;
+    if (Uy) {
+      const remain = this.eo.e868.length - focus.offset - gO0;
       if (remain >= 0) {
-        finalFocus = new AbstractPoint(this, focus.offset + step);
+        finalFocus = new bY(this, focus.offset + gO0);
       } else {
-        const result = $(event.root).dispatchEvent<AbstractPoint, SelectionTryMovePayload>({
-          type: AbstractEventType.SelectionTryMove,
-          payload: {
-            step: -remain,
-            forward: true,
+        const result = $(event.i0).bv<bY, SelectionTryMovePayload>({
+          type: 3,
+          fO: {
+            gO0: -remain,
+            Uy: true,
           },
         }, {
-          initiator: this,
-          point1: this,
-          forward: true,
-          configs: event.configs,
+          wQ: this,
+          oe87: this,
+          Uy: true,
+          gs: event.gs,
         });
-        finalFocus = result || new AbstractPoint(this, this.data.content.length);
+        finalFocus = result || new bY(this, this.eo.e868.length);
       }
     } else {
-      const remain = focus.offset - step;
-      if (remain > 0 || (shift && remain === 0)) {
-        finalFocus = new AbstractPoint(this, remain);
+      const remain = focus.offset - gO0;
+      if (remain > 0 || (i976 && remain === 0)) {
+        finalFocus = new bY(this, remain);
       } else {
-        const result = $(event.root).dispatchEvent<AbstractPoint, SelectionTryMovePayload>({
-          type: AbstractEventType.SelectionTryMove,
-          payload: {
-            step: -remain,
-            forward: false,
+        const result = $(event.i0).bv<bY, SelectionTryMovePayload>({
+          type: 3,
+          fO: {
+            gO0: -remain,
+            Uy: false,
           },
         }, {
-          initiator: this,
-          point1: this,
-          forward: false,
-          configs: event.configs,
+          wQ: this,
+          oe87: this,
+          Uy: false,
+          gs: event.gs,
         });
-        finalFocus = result || new AbstractPoint(this, 0);
+        finalFocus = result || new bY(this, 0);
       }
     }
 
-    let finalAnchor = shift ? anchor : finalFocus;
-    if (shift) {
-      if (forward ? anchor.offset === anchor.node.data.content.length : anchor.offset === 0) {
-        const result = $(event.root).dispatchEvent<AbstractPoint, SelectionTryMovePayload>({
-          type: AbstractEventType.SelectionTryMove,
-          payload: {
-            step: 0,
-            forward,
+    let finalAnchor = i976 ? anchor : finalFocus;
+    if (i976) {
+      if (Uy ? anchor.offset === anchor.node.eo.e868.length : anchor.offset === 0) {
+        const result = $(event.i0).bv<bY, SelectionTryMovePayload>({
+          type: 3,
+          fO: {
+            gO0: 0,
+            Uy,
           },
         }, {
-          initiator: anchor.node,
-          point1: anchor.node,
-          forward,
-          configs: event.configs,
+          wQ: anchor.node,
+          oe87: anchor.node,
+          Uy,
+          gs: event.gs,
         });
         if (result) {
           finalAnchor = result;
@@ -210,7 +210,7 @@ function selectionMove(
     }
 
     console.log(finalAnchor, finalFocus)
-    event.returnValue = new AbstractRange(finalAnchor, finalFocus);
+    event.rT = new w5(finalAnchor, finalFocus);
   }
 }
 
@@ -218,16 +218,16 @@ function selectionTryMove(
   this: AbstractText,
   event: AbstractEvent<SelectionTryMovePayload>,
 ) {
-  const { payload: { forward, step }, initiator } = event;
-  assert(initiator);
-  if (this === initiator) {
-    event.stopPropagation();
+  const { fO: { Uy, gO0 }, wQ } = event;
+  assert(wQ);
+  if (this === wQ) {
+    event.os();
     return;
   }
-  event.payload.step = Math.max(0, step - this.data.content.length);
-  if (event.payload.step === 0) {
-    event.returnValue = new AbstractPoint(this, forward ? step : this.data.content.length - step);
-    event.bail();
+  event.fO.gO0 = Math.max(0, gO0 - this.eo.e868.length);
+  if (event.fO.gO0 === 0) {
+    event.rT = new bY(this, Uy ? gO0 : this.eo.e868.length - gO0);
+    event.z6();
   }
 }
 
@@ -235,88 +235,88 @@ function contentReplace(
   this: AbstractText,
   event: AbstractEvent,
 ) {
-  assert(event.range);
-  const { anchor, focus, isForward } = event.range;
+  assert(event.Q0);
+  const { anchor, focus, j754: isForward } = event.Q0;
   const anchorBool = anchor.node === this;
   const focusBool = focus.node === this;
 
   if (anchorBool || focusBool) {
-    const { content } = this.data;
+    const { e868 } = this.eo;
   
     let spliceStart: number;
     let spliceEnd: number;
     if (isForward) {
       spliceStart = anchorBool ? anchor.offset : 0;
-      spliceEnd = focusBool ? focus.offset : content.length;
+      spliceEnd = focusBool ? focus.offset : e868.length;
     } else {
       spliceStart = anchorBool && !focusBool ? 0 : focus.offset;
-      spliceEnd = focusBool && !anchorBool ? content.length : anchor.offset;
+      spliceEnd = focusBool && !anchorBool ? e868.length : anchor.offset;
     }
   
     assert(spliceStart <= spliceEnd);
     const willFocus = isForward ? anchorBool : focusBool;
-    const value = willFocus ? event.payload.key : '';
-    const array = Array.from(content);
+    const value = willFocus ? event.fO.key : '';
+    const array = Array.from(e868);
     array.splice(spliceStart, spliceEnd - spliceStart, value);
     const nextContent = array.join('');
     abstractUpdate(this, ({ style }) => ({
-      content: nextContent,
+      e868: nextContent,
       style,
     }));
     
-    const context = event.context;
-    if (context && nextContent) {
-      context.parentContext.push(this);
+    const tr = event.tr;
+    if (tr && nextContent) {
+      tr.q54.push(this);
       if (willFocus) {
-        let point = new AbstractPoint(this, spliceStart + value.length);
+        let point = new bY(this, spliceStart + value.length);
         if (point.offset === 0) {
-          const result = $(event.root).dispatchEvent<AbstractPoint, SelectionTryMovePayload>({
-            type: AbstractEventType.SelectionTryMove,
-            payload: {
-              step: 0,
-              forward: false,
+          const result = $(event.i0).bv<bY, SelectionTryMovePayload>({
+            type: 3,
+            fO: {
+              gO0: 0,
+              Uy: false,
             },
           }, {
-            initiator: this,
-            point1: this,
-            forward: false,
-            configs: event.configs,
+            wQ: this,
+            oe87: this,
+            Uy: false,
+            gs: event.gs,
           });
           if (result) {
             point = result;
           }
         }
-        event.returnValue = new AbstractRange(point, point);
+        event.rT = new w5(point, point);
       }
     } else if (willFocus) {
-      let result = $(event.root).dispatchEvent<AbstractPoint, SelectionTryMovePayload>({
-        type: AbstractEventType.SelectionTryMove,
-        payload: {
-          step: 0,
-          forward: false,
+      let result = $(event.i0).bv<bY, SelectionTryMovePayload>({
+        type: 3,
+        fO: {
+          gO0: 0,
+          Uy: false,
         },
       }, {
-        initiator: this,
-        point1: this,
-        forward: false,
-        configs: event.configs,
+        wQ: this,
+        oe87: this,
+        Uy: false,
+        gs: event.gs,
       });
       if (!result) {
-        result = $(event.root).dispatchEvent<AbstractPoint, SelectionTryMovePayload>({
-          type: AbstractEventType.SelectionTryMove,
-          payload: {
-            step: 0,
-            forward: true,
+        result = $(event.i0).bv<bY, SelectionTryMovePayload>({
+          type: 3,
+          fO: {
+            gO0: 0,
+            Uy: true,
           },
         }, {
-          initiator: this,
-          point1: this,
-          forward: true,
-          configs: event.configs,
+          wQ: this,
+          oe87: this,
+          Uy: true,
+          gs: event.gs,
         });
       }
       assert(result);
-      event.returnValue = new AbstractRange(result, result);
+      event.rT = new w5(result, result);
     }
   }
 }
@@ -330,28 +330,28 @@ function textEnter(
 
 function textQueryStyle(
   this: AbstractText,
-  event: AbstractEvent<TextQueryStylePayload, AbstractText['data']['style']>,
+  event: AbstractEvent<TextQueryStylePayload, AbstractText['eo']['style']>,
 ) {
-  const { style } = this.data;
-  const { payload } = event;
+  const { style } = this.eo;
+  const { fO } = event;
 
   if (!style) {
-    event.returnValue = {};
-    event.bail();
+    event.rT = {};
+    event.z6();
     return;
   }
 
-  if (event.returnValue === undefined) {
-    event.returnValue = pick(style, payload.keys, true);
-    payload.keys = Object.keys(event.returnValue) as TextQueryStylePayload['keys'];
+  if (event.rT === undefined) {
+    event.rT = pick(style, fO.keys, true);
+    fO.keys = Object.keys(event.rT) as TextQueryStylePayload['keys'];
   }
 
-  const { returnValue } = event;
-  const { keys } = payload;
+  const { rT } = event;
+  const { keys } = fO;
   let requireClean = false;
   for (const key of keys) {
-    if (style[key] !== returnValue[key]) {
-      returnValue[key] = undefined;
+    if (style[key] !== rT[key]) {
+      rT[key] = undefined;
       if (!requireClean) {
         requireClean = true;
       }
@@ -359,28 +359,28 @@ function textQueryStyle(
   }
 
   if (requireClean) {
-    event.returnValue = pick(returnValue, keys, true);
-    payload.keys = Object.keys(event.returnValue) as TextQueryStylePayload['keys'];
-    if (!payload.keys.length) {
-      event.bail();
+    event.rT = pick(rT, keys, true);
+    fO.keys = Object.keys(event.rT) as TextQueryStylePayload['keys'];
+    if (!fO.keys.length) {
+      event.z6();
     }
   }
 }
 
-function pushText({ parentContext }: any, data: AbstractText['data'], parent?: AnyAbstractNode, absText = createAbstractText({ data, parent })) {
-  assert(parentContext);
-  const lastNode: AnyAbstractNode | undefined = parentContext.peek();
-  abstractUpdate(absText, data);
+function pushText({ q54 }: any, eo: AbstractText['eo'], nt?: AnyAbstractNode, absText = createAbstractText({ eo, nt })) {
+  assert(q54);
+  const lastNode: AnyAbstractNode | undefined = q54.p11();
+  abstractUpdate(absText, eo);
   if (
     !lastNode ||
-    lastNode.type !== DocType.Text ||
+    lastNode.type !== 4 ||
     !isSameStyleText(lastNode as AbstractText, absText)
   ) {
-    parentContext.push(absText);
+    q54.push(absText);
     return absText;
   } else {
     abstractUpdate(lastNode as AbstractText, prev => ({
-      content: prev.content + data.content,
+      e868: prev.e868 + eo.e868,
       style: prev.style,
     }));
     return lastNode;
@@ -391,56 +391,56 @@ function textFormatStyle(
   this: AbstractText,
   event: AbstractEvent,
 ) {
-  const { data: { content, style } } = this;
-  const { payload, context, range } = event;
-  assert(context && range);
-  const { anchor, focus, isForward } = range;
+  const { eo: { e868, style } } = this;
+  const { fO, tr, Q0 } = event;
+  assert(tr && Q0);
+  const { anchor, focus, j754: isForward } = Q0;
 
   let leftContent: string | undefined;
   let rightContent: string | undefined;
-  let left: AbstractPoint | undefined;
-  let right: AbstractPoint | undefined;
-  if (!range.collapsed && (anchor.node === this || focus.node === this)) {
+  let left: bY | undefined;
+  let right: bY | undefined;
+  if (!Q0.fmke && (anchor.node === this || focus.node === this)) {
     const _anchor = anchor.node === this ? anchor : undefined;
     const _focus = focus.node === this ? focus : undefined;
     [left, right] = isForward ? [_anchor, _focus] : [_focus, _anchor];
     if (left && left.offset > 0) {
-      leftContent = content.slice(0, left.offset);
+      leftContent = e868.slice(0, left.offset);
     }
-    if (right && right.offset < content.length) {
-      rightContent = content.slice(right.offset);
+    if (right && right.offset < e868.length) {
+      rightContent = e868.slice(right.offset);
     }
   }
-  const formatContent = !leftContent && !rightContent ? content : content.slice(left?.offset, right?.offset);
+  const formatContent = !leftContent && !rightContent ? e868 : e868.slice(left?.offset, right?.offset);
 
   if (leftContent) {
-    pushText(context, {
-      content: leftContent,
+    pushText(tr, {
+      e868: leftContent,
       style,
-    }, this.parent);
+    }, this.nt);
   }
-  const formatedData = payload.excludes.indexOf(this) !== -1 ? this.data : {
-    content: formatContent,
+  const formatedData = fO.excludes.indexOf(this) !== -1 ? this.eo : {
+    e868: formatContent,
     style: {
       ...style,
-      ...payload.style,
+      ...fO.style,
     },
   };
-  const formatedText = pushText(context, formatedData, this.parent, this);
-  const rightText = rightContent ? pushText(context, { content: rightContent, style }, this.parent) : undefined;
+  const formatedText = pushText(tr, formatedData, this.nt, this);
+  const rightText = rightContent ? pushText(tr, { e868: rightContent, style }, this.nt) : undefined;
 
   if (left || right) {
-    const abstractRange = event.returnValue;
+    const abstractRange = event.rT;
     const leftPoint = (
       left &&
-      new AbstractPoint(formatedText, formatedText.data.content.length - formatContent.length)
+      new bY(formatedText, formatedText.eo.e868.length - formatContent.length)
     );
     const rightPoint = (
       right &&
-      new AbstractPoint(formatedText, formatedText.data.content.length - (rightText === formatedText ? rightContent!.length : 0))
+      new bY(formatedText, formatedText.eo.e868.length - (rightText === formatedText ? rightContent!.length : 0))
     );
-    let p1: AbstractPoint;
-    let p2: AbstractPoint;
+    let p1: bY;
+    let p2: bY;
     if (isForward) {
       p1 = leftPoint || abstractRange?.anchor || rightPoint;
       p2 = rightPoint || abstractRange?.focus || leftPoint;
@@ -448,26 +448,26 @@ function textFormatStyle(
       p1 = rightPoint || abstractRange?.anchor || leftPoint;
       p2 = leftPoint || abstractRange?.focus || rightPoint;
     }
-    event.returnValue = new AbstractRange(p1, p2);
+    event.rT = new w5(p1, p2);
   }
 }
 
 const hooks: AbstractHooks = {
-  [AbstractEventType.SelectionMove]: selectionMove,
-  [AbstractEventType.SelectionTryMove]: selectionTryMove,
-  [AbstractEventType.ContentReplace]: contentReplace,
-  [AbstractEventType.TextEnter]: textEnter,
-  [AbstractEventType.TextQueryStyle]: textQueryStyle,
-  [AbstractEventType.TextFormatStyle]: textFormatStyle,
+  [2]: selectionMove,
+  [3]: selectionTryMove,
+  [8]: contentReplace,
+  [9]: textEnter,
+  [11]: textQueryStyle,
+  [10]: textFormatStyle,
 };
 
-const browserHooks: AbstractBrowserHooks = {
-  [AbstractEventType.SelectionSynchronize]: selectionSynchronize,
-  [AbstractEventType.SelectionRendering]: selectionRendering,
+const w007O: AbstractBrowserHooks = {
+  [0]: selectionSynchronize,
+  [1]: selectionRendering,
 };
 
 export const TextConfig = {
   View: TextView,
   hooks,
-  browserHooks,
+  w007O,
 };

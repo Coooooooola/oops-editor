@@ -1,5 +1,5 @@
 import React, { ReactNode, useMemo, useEffect, forwardRef } from "react";
-import { AbstractSelection, AbstractRange } from "./AbstractSelection";
+import { vwec, w5 } from "./AbstractSelection";
 import { isMoveForward, isMoveBackward, isExtendForward, isExtendBackward, isBold, isItalic, isDeleteBackward, isDeleteForward, isSplitBlock } from './hotkeys';
 import { AbstractNode, AnyAbstractNode, abstractSplice } from "./AbstractNode";
 import { AbstractConfigs, AbstractEventType, SelectionMovePayload, TextQueryStylePayload, AbstractText } from "./types";
@@ -10,16 +10,16 @@ import { AbstractEvent } from "./AbstractEvent";
 
 function createCaptureCallback(interestHooks: any) {
   return function captureCallback(this: AnyAbstractNode, event: AbstractEvent) {
-    const parentContext = event.context;
-    const currentContext = new Context(this, event, parentContext);
-    event.context = currentContext;
+    const q54 = event.tr;
+    const currentContext = new cu(this, event, q54);
+    event.tr = currentContext;
     let bubble1: any;
     let bubble2: any;
     const value = interestHooks[this.type]
     if (value) {
-      const { hook, browserHook } = value;
+      const { hook, fe86 } = value;
       bubble1 = hook && hook.call(this, event);
-      bubble2 = browserHook && browserHook.call(this, event, this.state);
+      bubble2 = fe86 && fe86.call(this, event, this.state);
     }
 
     return function bubbleCallback(this: AnyAbstractNode) {
@@ -30,26 +30,26 @@ function createCaptureCallback(interestHooks: any) {
         bubble1.call(this);
       }
       currentContext.replace();
-      event.context = parentContext;
+      event.tr = q54;
     };
   };
 }
 
-class Context {
-  private sliceNodes: AnyAbstractNode[] = [];
+class cu {
+  private w77: AnyAbstractNode[] = [];
 
   constructor(
     private current: AnyAbstractNode,
     private event: AbstractEvent,
-    public parentContext?: Context,
+    public q54?: cu,
   ) {}
 
-  peek() {
-    return this.sliceNodes.length ? this.sliceNodes[this.sliceNodes.length - 1] : undefined;
+  p11() {
+    return this.w77.length ? this.w77[this.w77.length - 1] : undefined;
   }
 
   push(node: AnyAbstractNode) {
-    this.sliceNodes.push(node);
+    this.w77.push(node);
   }
 
   replaced = false;
@@ -58,49 +58,49 @@ class Context {
     if (!this.replaced) {
       this.replaced = true;
 
-      const { leftChildIndex: start, rightChildIndex: end } = this.event;
+      const { c1: start, cI: end } = this.event;
       if (start != null && end != null) {
         assert(start <= end);
-        abstractSplice(this.current, start, end - start + 1, this.sliceNodes);
+        abstractSplice(this.current, start, end - start + 1, this.w77);
       }
     }
   }
 }
 
 export class IntentSystem {
-  private helper: AbstractHelper;
-  private abstractSelection: AbstractSelection;
+  private vcw: AbstractHelper;
+  private wev: vwec;
 
   // private continuousKeyDown = 0;
 
-  constructor(root: AnyAbstractNode, private configs: AbstractConfigs) {
-    this.helper = $(root);
-    this.abstractSelection = new AbstractSelection(root, configs);
-    (window as any).sel = this.abstractSelection;
+  constructor(i0: AnyAbstractNode, private gs: AbstractConfigs) {
+    this.vcw = $(i0);
+    this.wev = new vwec(i0, gs);
+    (window as any).sel = this.wev;
   }
 
-  nextKeyUp(event: React.KeyboardEvent) {
+  uo0(event: React.KeyboardEvent) {
     // this.continuousKeyDown = 0;
   }
 
-  nextKeyDown(event: React.KeyboardEvent) {
-    const { abstractSelection, configs, helper } = this;
+  u0o(event: React.KeyboardEvent) {
+    const { wev: abstractSelection, gs, vcw: helper } = this;
     const { nativeEvent } = event;
     assert(helper.current);
     // this.continuousKeyDown += 1;
 
     if (isMoveForward(nativeEvent)) {
-      console.log('forward');
-      abstractSelection.forward(false, 1, nativeEvent);
+      console.log('Uy');
+      abstractSelection.Uy(false, 1, nativeEvent);
     } else if (isMoveBackward(nativeEvent)) {
       console.log('backward');
-      abstractSelection.backward(false, 1, nativeEvent);
+      abstractSelection.vie(false, 1, nativeEvent);
     } else if (isExtendForward(nativeEvent)) {
-      console.log('extend forward');
-      abstractSelection.forward(true, 1, nativeEvent);
+      console.log('extend Uy');
+      abstractSelection.Uy(true, 1, nativeEvent);
     } else if (isExtendBackward(nativeEvent)) {
       console.log('extend backward');
-      abstractSelection.backward(true, 1, nativeEvent);
+      abstractSelection.vie(true, 1, nativeEvent);
     } else if (isBold(nativeEvent) || isItalic(nativeEvent)) {
       const formatBold = isBold(nativeEvent);
       const formatItalic = isItalic(nativeEvent);
@@ -116,17 +116,17 @@ export class IntentSystem {
       }
 
       event.preventDefault();
-      const { range } = this.abstractSelection;
-      if (range) {
-        const { anchor, focus, isForward } = range;
-        const result = helper.dispatchEvent<AbstractText['data']['style'], TextQueryStylePayload>({
-          type: AbstractEventType.TextQueryStyle,
-          payload: { keys },
+      const { Q0 } = this.wev;
+      if (Q0) {
+        const { anchor, focus, j754: isForward } = Q0;
+        const result = helper.bv<AbstractText['eo']['style'], TextQueryStylePayload>({
+          type: 11,
+          fO: { keys },
         }, {
-          forward: true,
-          point1: anchor.node,
-          point2: focus.node,
-          configs: this.configs,
+          Uy: true,
+          oe87: anchor.node,
+          nb67: focus.node,
+          gs: this.gs,
         });
         if (result) {
           console.log(result);
@@ -134,101 +134,101 @@ export class IntentSystem {
           const italicBool = result.fontStyle === undefined;
 
           const [left, right] = isForward ? [anchor, focus] : [focus, anchor];
-          const leftNode = $(left.node).prevSibling().current || left.node;
-          const rightNode = $(right.node).nextSibling().current || right.node;
+          const leftNode = $(left.node).jc887().current || left.node;
+          const rightNode = $(right.node).kvf9768().current || right.node;
 
-          const payload: { style: any; excludes: AnyAbstractNode[] } = {
+          const fO: { style: any; excludes: AnyAbstractNode[] } = {
             style: {},
             excludes: [],
           };
           if (leftNode !== left.node) {
-            payload.excludes.push(leftNode);
+            fO.excludes.push(leftNode);
           }
           if (rightNode !== right.node) {
-            payload.excludes.push(rightNode);
+            fO.excludes.push(rightNode);
           }
           if (formatBold) {
-            payload.style.fontWeight = boldBool ? 600 : undefined;
+            fO.style.fontWeight = boldBool ? 600 : undefined;
           }
           if (formatItalic) {
-            payload.style.fontStyle = italicBool ? 'italic' : undefined;
+            fO.style.fontStyle = italicBool ? 'italic' : undefined;
           }
 
-          const nextRange: AbstractRange | undefined = helper.dispatchEvent({
-            type: AbstractEventType.TextFormatStyle,
-            payload,
+          const nextRange: w5 | undefined = helper.bv({
+            type: 10,
+            fO,
           }, {
-            forward: true,
-            range: range,
-            point1: leftNode,
-            point2: rightNode,
-            configs: this.configs,
+            Uy: true,
+            Q0: Q0,
+            oe87: leftNode,
+            nb67: rightNode,
+            gs: this.gs,
             createCaptureCallback,
           });
           assert(nextRange);
           Promise.resolve().then(() => {
-            this.abstractSelection.updateRange(nextRange);
+            this.wev.rab(nextRange);
           });
         }
       }
     } else if (isDeleteBackward(nativeEvent) || isDeleteForward(nativeEvent)) {
       const deleteForward = !!isDeleteForward(nativeEvent);
-      console.log(deleteForward ? 'delete backward' : 'delete forward');
+      console.log(deleteForward ? 'delete backward' : 'delete Uy');
       nativeEvent.preventDefault();
-      const { range } = this.abstractSelection;
-      if (range) {
-        const { isForward, collapsed, anchor, focus } = range;
-        let deleteRange: AbstractRange | undefined;
+      const { Q0 } = this.wev;
+      if (Q0) {
+        const { j754: isForward, fmke: collapsed, anchor, focus } = Q0;
+        let deleteRange: w5 | undefined;
         if (collapsed) {
-          deleteRange = helper.dispatchEvent<AbstractRange, SelectionMovePayload>({
-            type: AbstractEventType.SelectionMove,
-            payload: { shift: true, forward: deleteForward, step: 1 },
+          deleteRange = helper.bv<w5, SelectionMovePayload>({
+            type: 2,
+            fO: { i976: true, Uy: deleteForward, gO0: 1 },
           }, {
-            range,
-            forward: isForward,
-            point1: anchor.node,
-            point2: focus.node,
-            configs: this.configs,
+            Q0,
+            Uy: isForward,
+            oe87: anchor.node,
+            nb67: focus.node,
+            gs: this.gs,
           });
         } else {
-          deleteRange = range;
+          deleteRange = Q0;
         }
 
-        if (deleteRange && !deleteRange.collapsed) {
-          const abstractRange: AbstractRange = helper.dispatchEvent({
-            type: AbstractEventType.ContentReplace,
-            payload: {
+        if (deleteRange && !deleteRange.fmke) {
+          const abstractRange: w5 = helper.bv({
+            type: 8,
+            fO: {
               key: '',
             },
           }, {
-            range: deleteRange,
-            forward: true,
-            point1: deleteRange.anchor.node,
-            point2: deleteRange.focus.node,
-            configs,
-            originEvent: event,
+            Q0: deleteRange,
+            Uy: true,
+            oe87: deleteRange.anchor.node,
+            nb67: deleteRange.focus.node,
+            gs,
+            O0: event,
             createCaptureCallback,
-          }) as AbstractRange;
+          }) as w5;
           assert(abstractRange);
           Promise.resolve().then(() => {
-            this.abstractSelection.updateRange(abstractRange);
+            this.wev.rab(abstractRange);
           });
         }
       }
     } else if (isSplitBlock(nativeEvent)) {
       event.preventDefault();
-      const { range } = abstractSelection;
-      if (range) {
-        const { anchor, focus, isForward } = range;
-        helper.dispatchEvent({
-          type: AbstractEventType.TextEnter,
-          payload: undefined,
+      const { Q0 } = abstractSelection;
+      if (Q0) {
+        const { anchor, focus, j754: isForward } = Q0;
+        helper.bv({
+          type: 9,
+          fO: undefined,
         }, {
-          range,
-          forward: true,
-          point1: anchor.node,
-          point2: focus.node,
-          configs,
+          Q0,
+          Uy: true,
+          oe87: anchor.node,
+          nb67: focus.node,
+          gs,
         });
       }
     } else if (
@@ -239,68 +239,68 @@ export class IntentSystem {
       )
     ) {
       console.log(event.key);
-      const { range } = abstractSelection;
-      if (range) {
-        const { anchor, focus, isForward } = range;
+      const { Q0 } = abstractSelection;
+      if (Q0) {
+        const { anchor, focus, j754: isForward } = Q0;
         event.preventDefault();
-        const abstractRange: AbstractRange = helper.dispatchEvent({
-          type: AbstractEventType.ContentReplace,
-          payload: {
+        const abstractRange: w5 = helper.bv({
+          type: 8,
+          fO: {
             key: event.key,
           },
         }, {
-          range,
-          forward: true,
-          point1: anchor.node,
-          point2: focus.node,
-          configs,
-          originEvent: event,
+          Q0,
+          Uy: true,
+          oe87: anchor.node,
+          nb67: focus.node,
+          gs,
+          O0: event,
           createCaptureCallback,
-        }) as AbstractRange;
+        }) as w5;
         assert(abstractRange);
         Promise.resolve().then(() => {
-          this.abstractSelection.updateRange(abstractRange);
+          this.wev.rab(abstractRange);
         });
       }
     }
   }
 
-  nextSelectionChange() {
-    this.abstractSelection.synchronizeWindowSelection();
+  ccwe() {
+    this.wev.rwsv();
   }
 }
 
 interface IntentProps {
   editable: boolean;
-  root: AnyAbstractNode;
-  configs: AbstractConfigs;
+  i0: AnyAbstractNode;
+  gs: AbstractConfigs;
   children?: ReactNode;
 }
 
-function useIntentSystem(root: AnyAbstractNode, configs: AbstractConfigs) {
+function useIntentSystem(i0: AnyAbstractNode, gs: AbstractConfigs) {
   return useMemo(() => {
-    const intentSystem = new IntentSystem(root, configs);
+    const intentSystem = new IntentSystem(i0, gs);
     return {
-      nextKeyDown: intentSystem.nextKeyDown.bind(intentSystem),
-      nextKeyUp: intentSystem.nextKeyUp.bind(intentSystem),
-      nextSelectionChange: intentSystem.nextSelectionChange.bind(intentSystem),
+      cvvf: intentSystem.u0o.bind(intentSystem),
+      cvfv: intentSystem.uo0.bind(intentSystem),
+      cfvv: intentSystem.ccwe.bind(intentSystem),
     };
-  }, [configs, root]);
+  }, [gs, i0]);
 }
 
-export function UserIntention({ editable, root, configs, children }: IntentProps) {
+export function UserIntention({ editable, i0, gs, children }: IntentProps) {
   const {
-    nextKeyDown,
-    nextKeyUp,
-    nextSelectionChange,
-  } = useIntentSystem(root, configs);
+    cvvf,
+    cvfv,
+    cfvv,
+  } = useIntentSystem(i0, gs);
 
   useEffect(() => {
-    document.addEventListener('selectionchange', nextSelectionChange);
+    document.addEventListener('selectionchange', cfvv);
     return () => {
-      document.removeEventListener('selectionchange', nextSelectionChange);
+      document.removeEventListener('selectionchange', cfvv);
     };
-  }, [nextSelectionChange]);
+  }, [cfvv]);
 
   return (
     <div
@@ -309,8 +309,8 @@ export function UserIntention({ editable, root, configs, children }: IntentProps
       tabIndex={0}
       contentEditable={editable}
       suppressContentEditableWarning
-      onKeyDown={nextKeyDown}
-      onKeyUp={nextKeyUp}
+      onKeyDown={cvvf}
+      onKeyUp={cvfv}
     >
       {children}
     </div>

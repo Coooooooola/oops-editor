@@ -3,9 +3,9 @@ import { AbstractNode } from "../AbstractNode";
 import { DocType, AbstractListItem } from "../types";
 import { useNextDocViews, useAbstractNodeData } from "./hooks";
 
-export function ListItemView({ context }: { context: AbstractListItem }) {
-  const { order } = useAbstractNodeData(context);
-  const views = useNextDocViews(context);
+export function ListItemView({ tr }: { tr: AbstractListItem }) {
+  const { order } = useAbstractNodeData(tr);
+  const views = useNextDocViews(tr);
   return (
     <div style={{ display: 'flex' }}>
       <div

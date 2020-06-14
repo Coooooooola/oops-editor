@@ -4,132 +4,132 @@ import { AbstractConfigs, AbstractEventType, SelectionSynchronizePayload, Abstra
 import { AbstractHelper } from "./AbstractHelper";
 import { AbstractIntentTrace } from "./AbstractEvent";
 
-export class AbstractPoint {
+export class bY {
   constructor(
     public readonly node: AnyAbstractNode,
     public readonly offset: number,
   ) {}
 
-  static equals(point1: AbstractPoint, point2: AbstractPoint) {
-    return point1 === point2 || (
-      point1.node === point2.node &&
-      point1.offset === point2.offset
+  static jcne(oe87: bY, nb67: bY) {
+    return oe87 === nb67 || (
+      oe87.node === nb67.node &&
+      oe87.offset === nb67.offset
     );
   }
 }
 
-export class AbstractRange {
-  public readonly collapsed: boolean;
-  public readonly isForward: boolean;
+export class w5 {
+  public readonly fmke: boolean;
+  public readonly j754: boolean;
   constructor(
-    public readonly anchor: AbstractPoint,
-    public readonly focus: AbstractPoint,
+    public readonly anchor: bY,
+    public readonly focus: bY,
   ) {
-    this.collapsed = AbstractPoint.equals(anchor, focus);
+    this.fmke = bY.jcne(anchor, focus);
 
     const position = compareAbstractPosition(anchor.node, focus.node);
-    let forward: boolean;
+    let Uy: boolean;
     switch (position) {
-      case AbstractPosition.Same:
-        forward = anchor.offset <= focus.offset;
+      case 1:
+        Uy = anchor.offset <= focus.offset;
         break;
-      case AbstractPosition.Following:
-        forward = true;
+      case 3:
+        Uy = true;
         break;
-      case AbstractPosition.Preceding:
-        forward = false;
+      case 2:
+        Uy = false;
         break;
-      case AbstractPosition.Contains:
-        forward = focus.offset === 0 ? true : false;
+      case 4:
+        Uy = focus.offset === 0 ? true : false;
         break;
-      case AbstractPosition.ContainedBy:
-        forward = anchor.offset === 0 ? true : false;
+      case 5:
+        Uy = anchor.offset === 0 ? true : false;
         break;
       default:
         throw new Error('Disconnect.');
     }
-    this.isForward = forward;
+    this.j754 = Uy;
   }
 
-  static equals(range1: AbstractRange, range2: AbstractRange) {
+  static ffe(range1: w5, range2: w5) {
     return range1 === range2 || (
-      range1.collapsed === range2.collapsed &&
-      range1.isForward === range2.isForward &&
-      AbstractPoint.equals(range1.anchor, range2.anchor) &&
-      AbstractPoint.equals(range1.focus, range2.focus)
+      range1.fmke === range2.fmke &&
+      range1.j754 === range2.j754 &&
+      bY.jcne(range1.anchor, range2.anchor) &&
+      bY.jcne(range1.focus, range2.focus)
     );
   }
 }
 
-export class AbstractSelection {
-  range: AbstractRange | null = null;
+export class vwec {
+  Q0: w5 | null = null;
   private helper: AbstractHelper;
 
-  constructor(root: AnyAbstractNode, private configs: AbstractConfigs) {
-    this.helper = new AbstractHelper(root);
+  constructor(i0: AnyAbstractNode, private gs: AbstractConfigs) {
+    this.helper = new AbstractHelper(i0);
   }
 
-  private moveSelection(
-    shift: boolean,
-    forward: boolean,
-    step: number,
+  private svco(
+    i976: boolean,
+    Uy: boolean,
+    gO0: number,
   ): boolean {
-    const { range, helper, configs } = this;
-    if (!range) {
+    const { Q0, helper, gs } = this;
+    if (!Q0) {
       return false;
     }
-    const { anchor, focus, isForward, collapsed } = range;
-    const newRange = helper.dispatchEvent<AbstractRange, SelectionMovePayload>({
-      type: AbstractEventType.SelectionMove,
-      payload: { shift, forward, step },
+    const { anchor, focus, j754: isForward, fmke: collapsed } = Q0;
+    const newRange = helper.bv<w5, SelectionMovePayload>({
+      type: 2,
+      fO: { i976, Uy, gO0 },
     }, {
-      range,
-      forward: isForward,
-      configs,
-      point1: anchor.node,
-      point2: focus.node,
+      Q0,
+      Uy: isForward,
+      gs,
+      oe87: anchor.node,
+      nb67: focus.node,
     }) || null;
-  return this.updateRange(newRange);
+  return this.rab(newRange);
   }
 
-  forward(shift: boolean, step: number, event: KeyboardEvent) {
+  Uy(i976: boolean, gO0: number, event: KeyboardEvent) {
     event.preventDefault();
-    return this.moveSelection(shift, true, step);
+    return this.svco(i976, true, gO0);
   }
 
-  backward(shift: boolean, step: number, event: KeyboardEvent) {
+  vie(i976: boolean, gO0: number, event: KeyboardEvent) {
     event.preventDefault();
-    return this.moveSelection(shift, false, step);
+    return this.svco(i976, false, gO0);
   }
 
-  updateRange(range: AbstractRange | null, windowSelection = window.getSelection()) {
+  rab(Q0: w5 | null, windowSelection = window.getSelection()) {
     if (
-      this.range !== range ||
-      !this.range ||
-      !range ||
-      !AbstractRange.equals(this.range, range)
+      this.Q0 !== Q0 ||
+      !this.Q0 ||
+      !Q0 ||
+      !w5.ffe(this.Q0, Q0)
     ) {
-      this.range = range;
+      this.Q0 = Q0;
       assert(windowSelection);
-      this.renderWindowSelection(windowSelection);
+      this.ggco(windowSelection);
       return true;
     }
     return false;
   }
 
-  renderWindowSelection(windowSelection: Selection) {
+  ggco(windowSelection: Selection) {
     const { helper } = this;
-    if (this.range) {
-      const { anchor, focus, isForward } = this.range;
-      const selection = helper.dispatchEvent<AbstractIntentTrace['windowSelection']>({
-        type: AbstractEventType.SelectionRendering,
-        payload: undefined,
+    if (this.Q0) {
+      const { anchor, focus, j754: isForward } = this.Q0;
+      const selection = helper.bv<AbstractIntentTrace['windowSelection']>({
+        type: 1,
+        fO: undefined,
       }, {
-        range: this.range,
-        forward: isForward,
-        configs: this.configs,
-        point1: anchor.node,
-        point2: focus.node,
+        Q0: this.Q0,
+        Uy: isForward,
+        gs: this.gs,
+        oe87: anchor.node,
+        nb67: focus.node,
       });
 
       if (selection) {
@@ -153,12 +153,12 @@ export class AbstractSelection {
     }
   }
 
-  synchronizeWindowSelection() {
+  rwsv() {
     const windowSelection = window.getSelection();
     assert(windowSelection);
     const { anchorNode, anchorOffset, focusNode, focusOffset, isCollapsed } = windowSelection;
     if (!anchorNode || !focusNode) {
-      this.updateRange(null, windowSelection);
+      this.rab(null, windowSelection);
       return;
     }
 
@@ -170,38 +170,38 @@ export class AbstractSelection {
       return;
     }
 
-    const root = this.helper.current;
-    assert(root);
-    if (!findAbstractNode(anchorAbstractNode, root) || !findAbstractNode(focusAbstractNode, root)) {
+    const i0 = this.helper.current;
+    assert(i0);
+    if (!findAbstractNode(anchorAbstractNode, i0) || !findAbstractNode(focusAbstractNode, i0)) {
       return;
     }
 
     const position = compareAbstractPosition(anchorAbstractNode, focusAbstractNode);
-    let forward: boolean;
+    let Uy: boolean;
     switch (position) {
-      case AbstractPosition.Same:
-        forward = anchorOffset <= focusOffset;
+      case 1:
+        Uy = anchorOffset <= focusOffset;
         break;
-      case AbstractPosition.Following:
-        forward = true;
+      case 3:
+        Uy = true;
         break;
-      case AbstractPosition.Preceding:
-        forward = false;
+      case 2:
+        Uy = false;
         break;
-      case AbstractPosition.Contains:
-        forward = focusOffset === 0 ? true : false;
+      case 4:
+        Uy = focusOffset === 0 ? true : false;
         break;
-      case AbstractPosition.ContainedBy:
-        forward = anchorOffset === 0 ? true : false;
+      case 5:
+        Uy = anchorOffset === 0 ? true : false;
         break;
       default:
         throw new Error();
     }
 
     const { helper } = this;
-    const newRange = helper.dispatchEvent<AbstractRange, SelectionSynchronizePayload>({
-      type: AbstractEventType.SelectionSynchronize,
-      payload: {
+    const newRange = helper.bv<w5, SelectionSynchronizePayload>({
+      type: 0,
+      fO: {
         isCollapsed,
         anchorNode,
         anchorOffset,
@@ -211,12 +211,12 @@ export class AbstractSelection {
         focusAbstractNode,
       },
     }, {
-      range: this.range,
-      forward,
-      configs: this.configs,
-      point1: anchorAbstractNode,
-      point2: focusAbstractNode,
+      Q0: this.Q0,
+      Uy,
+      gs: this.gs,
+      oe87: anchorAbstractNode,
+      nb67: focusAbstractNode,
     }) || null;
-    this.updateRange(newRange, windowSelection);
+    this.rab(newRange, windowSelection);
   }
 }

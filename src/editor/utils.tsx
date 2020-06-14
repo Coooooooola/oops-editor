@@ -38,7 +38,7 @@ export function findAbstractNode(node: AnyAbstractNode, target: AnyAbstractNode)
     if (p === target) {
       return target;
     }
-    p = p.parent;
+    p = p.nt;
   }
 }
 
@@ -84,20 +84,20 @@ export function getAbstractNodePath(from: AnyAbstractNode, to?: AnyAbstractNode)
     if (p === to) {
       break;
     }
-    p = p.parent;
+    p = p.nt;
   }
   return path.reverse();
 }
 
 export function compareAbstractPosition(node1: AnyAbstractNode, node2: AnyAbstractNode): AbstractPosition {
   if (node1 === node2) {
-    return AbstractPosition.Same;
+    return 1;
   }
   const path1 = getAbstractNodePath(node1);
   const path2 = getAbstractNodePath(node2);
 
   if (path1[0] !== path2[0]) {
-    return AbstractPosition.Disconnected;
+    return 0;
   }
 
   const minLength = Math.min(path1.length, path2.length);
@@ -105,14 +105,14 @@ export function compareAbstractPosition(node1: AnyAbstractNode, node2: AnyAbstra
     const n1 = path1[i];
     const n2 = path2[i];
     if (n1 !== n2) {
-      const { abstractNodes } = path1[i - 1];
-      assert(abstractNodes);
-      const index1 = abstractNodes.indexOf(n1);
-      const index2 = abstractNodes.indexOf(n2);
-      return index1 <= index2 ? AbstractPosition.Following : AbstractPosition.Preceding;
+      const { ns } = path1[i - 1];
+      assert(ns);
+      const index1 = ns.indexOf(n1);
+      const index2 = ns.indexOf(n2);
+      return index1 <= index2 ? 3 : 2;
     }
   }
-  return path1.length <= path2.length ? AbstractPosition.ContainedBy : AbstractPosition.Contains;
+  return path1.length <= path2.length ? 5 : 4;
 }
 
 export function pick<T extends { [key: string]: any }>(object: T, keys: (keyof T)[], withoutUndefined = false) {

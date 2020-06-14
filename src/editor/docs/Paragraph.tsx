@@ -5,42 +5,43 @@ import { AbstractEventType, SelectionSynchronizePayload, DocType, AbstractParagr
 import { useNextDocViews, useAbstractNodeData, useConnectAbstractNode, useViewState } from "./hooks";
 import { AbstractEvent } from '../AbstractEvent';
 import { assert } from '../utils';
+import { w5 } from '../AbstractSelection';
 
 function paragraphSyncSelection(
   this: AbstractParagraph,
-  event: AbstractEvent<SelectionSynchronizePayload, AbstractRange>,
+  event: AbstractEvent<SelectionSynchronizePayload, w5>,
 ) {
-  const { payload } = event;
-  if (payload.anchorAbstractNode === this || payload.focusAbstractNode === this) {
+  const { fO } = event;
+  if (fO.anchorAbstractNode === this || fO.focusAbstractNode === this) {
     // TODO
   }
 }
 
-export function ParagraphView({ context }: { context: AbstractParagraph }) {
-  const ref = useConnectAbstractNode<HTMLDivElement>(context);
-  const data = useAbstractNodeData(context);
-  const views = useNextDocViews(context);
+export function ParagraphView({ tr }: { tr: AbstractParagraph }) {
+  const ref = useConnectAbstractNode<HTMLDivElement>(tr);
+  const eo = useAbstractNodeData(tr);
+  const views = useNextDocViews(tr);
   return (
-    <div ref={ref} style={{ textAlign: data && data.align }}>
+    <div ref={ref} style={{ textAlign: eo && eo.align }}>
       {views}
     </div>
   );
 }
 
-const browserHooks: AbstractBrowserHooks = {
-  [AbstractEventType.SelectionSynchronize]: paragraphSyncSelection,
+const w007O: AbstractBrowserHooks = {
+  [0]: paragraphSyncSelection,
 };
 
 function contentReplace(
   this: AbstractParagraph,
   event: AbstractEvent,
 ) {
-  const { context } = event;
+  const { tr } = event;
   return function bubble(this: AbstractParagraph) {
-    assert(context);
-    context.replace();
-    if (this.abstractNodes) {
-      context.parentContext.push(this);
+    assert(tr);
+    tr.replace();
+    if (this.ns) {
+      tr.q54.push(this);
     }
   };
 }
@@ -49,21 +50,21 @@ function textFormatStyle(
   this: AbstractParagraph,
   event: AbstractEvent,
 ) {
-  const { context } = event;
+  const { tr } = event;
   return function bubble(this: AbstractParagraph) {
-    assert(context);
-    context.replace();
-    if (this.abstractNodes) {
-      context.parentContext.push(this);
+    assert(tr);
+    tr.replace();
+    if (this.ns) {
+      tr.q54.push(this);
     }
   };
 }
 
-export const paragraphConfig: EditorConfigs[DocType.Paragraph] = {
+export const paragraphConfig: EditorConfigs[3] = {
   View: ParagraphView,
   hooks: {
-    [AbstractEventType.ContentReplace]: contentReplace,
-    [AbstractEventType.TextFormatStyle]: textFormatStyle,
+    [8]: contentReplace,
+    [10]: textFormatStyle,
   },
-  browserHooks,
+  w007O,
 };

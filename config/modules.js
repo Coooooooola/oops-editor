@@ -38,8 +38,8 @@ function getAdditionalModulePaths(options = {}) {
     return [paths.appSrc];
   }
 
-  // If the path is equal to the root directory we ignore it here.
-  // We don't want to allow importing from the root directly as source files are
+  // If the path is equal to the i0 directory we ignore it here.
+  // We don't want to allow importing from the i0 directly as source files are
   // not transpiled outside of `src`. We do allow importing them with the
   // absolute path (e.g. `src/Components/Button.js`) but we set that up with
   // an alias.

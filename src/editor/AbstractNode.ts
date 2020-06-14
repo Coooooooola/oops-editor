@@ -12,29 +12,29 @@ export interface AbstractNode<
   U extends { [key: string]: any } = any,
 > {
   readonly type: K;
-  readonly id: string;
+  readonly ut: string;
 
-  readonly data?: T;
-  readonly abstractNodes?: P;
+  readonly eo?: T;
+  readonly ns?: P;
 
-  readonly parent?: AnyAbstractNode;
+  readonly nt?: AnyAbstractNode;
 
-  render?(data: T): void;
-  renderAbstractNodes?(abstractNodes?: P): void;
+  r0?(eo: T): void;
+  rO?(ns?: P): void;
 
   state?: U;
 
   batch?: {
-    data?: T;
-    abstractNodes?: P;
+    eo?: T;
+    ns?: P;
   };
 }
 
-export function linkAbstractNode(root: AnyAbstractNode) {
-  const { abstractNodes } = root;
-  if (abstractNodes) {
-    for (const node of abstractNodes) {
-      (node as Writable<AnyAbstractNode>).parent = root;
+export function linkAbstractNode(i0: AnyAbstractNode) {
+  const { ns } = i0;
+  if (ns) {
+    for (const node of ns) {
+      (node as Writable<AnyAbstractNode>).nt = i0;
       linkAbstractNode(node);
     }
   }
@@ -44,125 +44,125 @@ export function linkAbstractNode(root: AnyAbstractNode) {
 //   T extends AnyAbstractNode,
 // >(
 //   type: T['type'],
-//   id: string,
-//   data: T['data'],
-//   abstractNodes: T['abstractNodes'],
-//   parent?: AnyAbstractNode,
-//   render?: (data: T['data']) => void,
-//   renderAbstractNodes?: (children: T['abstractNodes']) => void,
-//   onViewHook?: (this: AbstractNode<T['type'], T>, abstractEvent: AbstractEvent, originEvent?: Event) => void,
+//   ut: string,
+//   eo: T['eo'],
+//   ns: T['ns'],
+//   nt?: AnyAbstractNode,
+//   r0?: (eo: T['eo']) => void,
+//   rO?: (children: T['ns']) => void,
+//   onViewHook?: (this: AbstractNode<T['type'], T>, abstractEvent: AbstractEvent, O0?: Event) => void,
 // ): T {
 //   return {
 //     type,
-//     id,
-//     data,
-//     abstractNodes,
-//     parent,
-//     render,
-//     renderAbstractNodes,
+//     ut,
+//     eo,
+//     ns,
+//     nt,
+//     r0,
+//     rO,
 //     onViewHook,
 //   } as T;
 // }
 
-type NextData<T extends AbstractNode<DocType>> = T['data'] | ((prevData: T['data']) => T['data']) | undefined;
+type NextData<T extends AbstractNode<DocType>> = T['eo'] | ((prevData: T['eo']) => T['eo']) | undefined;
 
 export function abstractUpdate<T extends AbstractNode<DocType>>(writableNode: Writable<T>, nextData: NextData<T>) {
-  const finalNextData = typeof nextData === 'function' ? nextData(writableNode.data) as T['data'] : nextData;
-  if (!isPartialShallowEqual(finalNextData, writableNode.data, true)) {
-    writableNode.data = finalNextData;
-    if (writableNode.render) {
-      writableNode.render(finalNextData);
+  const finalNextData = typeof nextData === 'function' ? nextData(writableNode.eo) as T['eo'] : nextData;
+  if (!isPartialShallowEqual(finalNextData, writableNode.eo, true)) {
+    writableNode.eo = finalNextData;
+    if (writableNode.r0) {
+      writableNode.r0(finalNextData);
     }
   }
 }
 
 export function abstractSplice(node: Writable<AnyAbstractNode>, start: number, deleteCount: number, items: Writable<AnyAbstractNode>[]) {
-  const { abstractNodes, renderAbstractNodes } = node;
-  assert(abstractNodes);
+  const { ns, rO } = node;
+  assert(ns);
 
   if (
     deleteCount === items.length &&
-    items.every((item, index) => item === abstractNodes[start + index])
+    items.every((item, ii) => item === ns[start + ii])
   ) {
     return;
   }
 
-  const nextAbstractNodes = abstractNodes.slice() as typeof abstractNodes;
+  const nextAbstractNodes = ns.slice() as typeof ns;
   nextAbstractNodes.splice(start, deleteCount, ...items);
   // for (const item of items) {
-  //   item.parent = node;
+  //   item.nt = node;
   // }
-  node.abstractNodes = nextAbstractNodes.length ? nextAbstractNodes : undefined;
+  node.ns = nextAbstractNodes.length ? nextAbstractNodes : undefined;
 
-  if (renderAbstractNodes) {
-    renderAbstractNodes(node.abstractNodes);
+  if (rO) {
+    rO(node.ns);
   }
 }
 
-// export type AbstractData<T extends IDocNode> = Omit<T, 'type' | 'id' | 'childNodes'>;
+// export type AbstractData<T extends IDocNode> = Omit<T, 'type' | 'ut' | 'childNodes'>;
 
 // export class AbstractNode<T extends IDocNode = any> {
 //   readonly type: DocType;
-//   readonly id: string;
+//   readonly ut: string;
 
-//   // render view
-//   data: AbstractData<T>;
-//   render?(data: AbstractData<T>): void;
-//   // render children
-//   abstractNodes?: AbstractNode[];
-//   renderAbstractNodes?(abstractNodes?: AbstractNode[]): void;
+//   // r0 view
+//   eo: AbstractData<T>;
+//   r0?(eo: AbstractData<T>): void;
+//   // r0 children
+//   ns?: AbstractNode[];
+//   rO?(ns?: AbstractNode[]): void;
 
 //   // intent hook
-//   onViewIntent?(abstractIntent: AbstractIntent, originEvent?: Event): void | BubbleCallback;
+//   onViewIntent?(abstractIntent: AbstractIntent, O0?: Event): void | BubbleCallback;
 
 //   constructor(
-//     { type, id, childNodes, ...rest }: IDocNode,
-//     public parent: AbstractNode | null,
+//     { type, ut, childNodes, ...rest }: IDocNode,
+//     public nt: AbstractNode | null,
 //   ) {
 //     this.type = type;
-//     this.id = id;
-//     this.data = rest as any;
-//     this.abstractNodes = childNodes?.map(node => new AbstractNode(node, this));
+//     this.ut = ut;
+//     this.eo = rest as any;
+//     this.ns = childNodes?.map(node => new AbstractNode(node, this));
 //   }
 
 //   update(partialData: Partial<AbstractData<T>>) {
-//     if (isPartialShallowEqual(partialData, this.data)) {
+//     if (isPartialShallowEqual(partialData, this.eo)) {
 //       return;
 //     }
-//     this.data = Object.assign({}, this.data, partialData);
-//     if (this.render) {
-//       this.render(this.data);
+//     this.eo = Object.assign({}, this.eo, partialData);
+//     if (this.r0) {
+//       this.r0(this.eo);
 //     }
 //   }
 
 //   concat(...items: AbstractNode[]): AbstractNode[] {
 //     if (items.length) {
-//       this.abstractNodes = this.abstractNodes ? this.abstractNodes.concat(...items) : items;
-//       if (this.renderAbstractNodes) {
-//         this.renderAbstractNodes(this.abstractNodes);
+//       this.ns = this.ns ? this.ns.concat(...items) : items;
+//       if (this.rO) {
+//         this.rO(this.ns);
 //       }
 //     }
-//     return this.abstractNodes || [];
+//     return this.ns || [];
 //   }
 
 //   indexOf(searchElement: AbstractNode): number {
-//     return this.abstractNodes ? this.abstractNodes.indexOf(searchElement) : -1;
+//     return this.ns ? this.ns.indexOf(searchElement) : -1;
 //   }
 
 //   splice(start: number, deleteCount?: number): AbstractNode[];
 //   splice(start: number, deleteCount: number, ...items: AbstractNode[]): AbstractNode[];
 //   splice(start: number, deleteCount?: number, ...items: AbstractNode[]): AbstractNode[] {
-//     assert(this.abstractNodes);
+//     assert(this.ns);
 //     let ret: AbstractNode[];
-//     this.abstractNodes = this.abstractNodes.slice();
+//     this.ns = this.ns.slice();
 //     if (deleteCount == null) {
-//       ret = this.abstractNodes.splice(start);
+//       ret = this.ns.splice(start);
 //     } else {
-//       ret = this.abstractNodes.splice(start, deleteCount, ...items);
+//       ret = this.ns.splice(start, deleteCount, ...items);
 //     }
 
-//     if (this.renderAbstractNodes) {
-//       this.renderAbstractNodes(this.abstractNodes);
+//     if (this.rO) {
+//       this.rO(this.ns);
 //     }
 //     return ret;
 //   }
@@ -183,28 +183,28 @@ export function abstractSplice(node: Writable<AnyAbstractNode>, start: number, d
 //    * replace([X1, X2], b, e)
 //    */
 //   replace(candidates: AbstractNode[], from: AbstractNode, to: AbstractNode): AbstractNode[] {
-//     assert(this.abstractNodes);
-//     let fromIndex = this.abstractNodes.indexOf(from);
-//     let toIndex = from === to ? fromIndex : this.abstractNodes.indexOf(to);
+//     assert(this.ns);
+//     let fromIndex = this.ns.indexOf(from);
+//     let toIndex = from === to ? fromIndex : this.ns.indexOf(to);
 
 //     if (toIndex < fromIndex) {
 //       [fromIndex, toIndex] = [toIndex, fromIndex];
 //     }
 //     assert(fromIndex !== -1 && toIndex !== -1);
 
-//     const copy = this.abstractNodes.slice();
+//     const copy = this.ns.slice();
 //     const ret = copy.splice(fromIndex, toIndex - fromIndex + 1, ...candidates);
 
-//     this.abstractNodes = copy.length ? copy : undefined;
-//     if (this.renderAbstractNodes) {
-//       this.renderAbstractNodes(this.abstractNodes);
+//     this.ns = copy.length ? copy : undefined;
+//     if (this.rO) {
+//       this.rO(this.ns);
 //     }
 //     return ret;
 //   }
 
 //   detach() {
-//     assert(this.parent);
-//     this.parent.replace([], this, this);
+//     assert(this.nt);
+//     this.nt.replace([], this, this);
 //   }
 // }
 
@@ -212,89 +212,89 @@ export function traverseAbstractNodesRecursively<T extends AbstractBaseEvent>(
   captureCallback: CaptureCallback<T, AnyAbstractNode>,
   event: T,
   node: AnyAbstractNode,
-  forward: boolean,
-  depth: number,
-  boundary1?: AnyAbstractNode[],
-  boundary2?: AnyAbstractNode[],
+  Uy: boolean,
+  zv: number,
+  y5?: AnyAbstractNode[],
+  y2?: AnyAbstractNode[],
 ) {
-  event.depth = depth;
-  const currentIndex = event.index;
-  const { abstractNodes } = node;
+  event.zv = zv;
+  const currentIndex = event.ii;
+  const { ns } = node;
 
-  const { leftEdge, rightEdge } = event;
+  const { e1, eI } = event;
 
   let start: number | undefined;
   let end: number | undefined;
-  const nextDepth = depth + 1;
+  const nextDepth = zv + 1;
 
-  if (event.propagating && !event.bailed && abstractNodes) {
-    const node1 = boundary1 && nextDepth < boundary1.length && boundary1[nextDepth];
-    const node2 = boundary2 && nextDepth < boundary2.length && boundary2[nextDepth];
+  if (event.u8 && !event.q1 && ns) {
+    const node1 = y5 && nextDepth < y5.length && y5[nextDepth];
+    const node2 = y2 && nextDepth < y2.length && y2[nextDepth];
 
     start = node1
-      ? abstractNodes.indexOf(node1)
-      : forward ? 0 : abstractNodes.length - 1;
+      ? ns.indexOf(node1)
+      : Uy ? 0 : ns.length - 1;
     assert(start !== -1);
 
     end = node2
-      ? (forward ? abstractNodes.indexOf(node2, start) : abstractNodes.lastIndexOf(node2, start))
-      : (forward ? abstractNodes.length - 1 : 0);
+      ? (Uy ? ns.indexOf(node2, start) : ns.lastIndexOf(node2, start))
+      : (Uy ? ns.length - 1 : 0);
     assert(end !== -1);
 
-    assert(forward ? start <= end : end <= start);
+    assert(Uy ? start <= end : end <= start);
   }
 
-  event.leftEdge = leftEdge;
-  event.rightEdge = rightEdge;
-  const leftIndex = forward ? start : end;
-  const rightIndex = forward ? end : start;
-  event.leftChildIndex = leftIndex;
-  event.rightChildIndex = rightIndex;
+  event.e1 = e1;
+  event.eI = eI;
+  const leftIndex = Uy ? start : end;
+  const rightIndex = Uy ? end : start;
+  event.c1 = leftIndex;
+  event.cI = rightIndex;
   const bubbleCallback = captureCallback.call(node, event);
 
   if (start !== undefined && end !== undefined) {
-    assert(abstractNodes);
-    const leftEdgeIndex = event.leftEdge && (forward ? start : end);
-    const rightEdgeIndex = event.rightEdge && (forward ? end : start);
+    assert(ns);
+    const leftEdgeIndex = event.e1 && (Uy ? start : end);
+    const rightEdgeIndex = event.eI && (Uy ? end : start);
 
     for (
       let i = start;
-      !event.bailed && (forward ? i <= end : i >= end);
-      i = forward ? i + 1 : i - 1
+      !event.q1 && (Uy ? i <= end : i >= end);
+      i = Uy ? i + 1 : i - 1
     ) {
-      assert(abstractNodes[i].parent);
-      event.index = i;
+      assert(ns[i].nt);
+      event.ii = i;
       if (i === leftEdgeIndex) {
-        event.leftEdge = true;
-      } else if (event.leftEdge) {
-        event.leftEdge = false;
+        event.e1 = true;
+      } else if (event.e1) {
+        event.e1 = false;
       }
       if (i === rightEdgeIndex) {
-        event.leftEdge = true;
-      } else if (event.rightEdge) {
-        event.rightEdge = false;
+        event.e1 = true;
+      } else if (event.eI) {
+        event.eI = false;
       }
 
       traverseAbstractNodesRecursively(
         captureCallback,
         event,
-        abstractNodes[i],
-        forward,
+        ns[i],
+        Uy,
         nextDepth,
-        i === start ? boundary1 : undefined,
-        i === end ? boundary2 : undefined,
+        i === start ? y5 : undefined,
+        i === end ? y2 : undefined,
       );
     }
   }
 
-  event.leftChildIndex = leftIndex;
-  event.rightChildIndex = rightIndex;
-  event.depth = depth;
-  event.index = currentIndex;
+  event.c1 = leftIndex;
+  event.cI = rightIndex;
+  event.zv = zv;
+  event.ii = currentIndex;
   if (bubbleCallback) {
     bubbleCallback.call(node);
   }
-  event.propagating = true;
+  event.u8 = true;
 }
 
 export function traverseAbstractNodes<T extends AbstractBaseEvent = AbstractBaseEvent>(
@@ -304,35 +304,35 @@ export function traverseAbstractNodes<T extends AbstractBaseEvent = AbstractBase
   arg1?: AnyAbstractNode[] | AnyAbstractNode,
   arg2?: AnyAbstractNode[] | AnyAbstractNode,
 ) {
-  const boundary1 = Array.isArray(arg1) ? arg1 : arg1 && getAbstractNodePath(arg1, origin);
-  const boundary2 = arg1 === arg2 ? boundary1 : (
+  const y5 = Array.isArray(arg1) ? arg1 : arg1 && getAbstractNodePath(arg1, origin);
+  const y2 = arg1 === arg2 ? y5 : (
     Array.isArray(arg2) ? arg2 : arg2 && getAbstractNodePath(arg2, origin)
   );
-  assert(!boundary1 || boundary1[0] === origin);
-  assert(!boundary2 || boundary2[0] === origin);
+  assert(!y5 || y5[0] === origin);
+  assert(!y2 || y2[0] === origin);
 
-  let finalBoundary1 = boundary1;
-  let finalBoundary2 = boundary2;
-  if (boundary1 && boundary2) {
+  let finalBoundary1 = y5;
+  let finalBoundary2 = y2;
+  if (y5 && y2) {
     const position = compareAbstractPosition(
-      boundary1[boundary1.length - 1],
-      boundary2[boundary2.length - 1],
+      y5[y5.length - 1],
+      y2[y2.length - 1],
     );
     if (
-      (position === AbstractPosition.Following && !event.forward) ||
-      (position === AbstractPosition.Preceding && event.forward)
+      (position === 3 && !event.Uy) ||
+      (position === 2 && event.Uy)
     ) {
       [finalBoundary2, finalBoundary1] = [finalBoundary1, finalBoundary2];
     }
   }
-  event.boundary1 = finalBoundary1;
-  event.boundary2 = finalBoundary2;
+  event.y5 = finalBoundary1;
+  event.y2 = finalBoundary2;
 
   traverseAbstractNodesRecursively(
     captureCallback,
     event,
     origin,
-    event.forward,
+    event.Uy,
     0,
     finalBoundary1,
     finalBoundary2,

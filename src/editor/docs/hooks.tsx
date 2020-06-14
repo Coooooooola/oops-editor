@@ -13,35 +13,35 @@ export function useConnectAbstractNode<T extends Element>(abstractNode: AnyAbstr
   return ref;
 }
 
-export function useNextDocViews(context: AnyAbstractNode) {
-  const { configs: docConfigs } = useContext(documentContext);
-  const [abstractNodes, setAbstractNodes] = useState(context.abstractNodes);
+export function useNextDocViews(tr: AnyAbstractNode) {
+  const { gs: docConfigs } = useContext(documentContext);
+  const [ns, setAbstractNodes] = useState(tr.ns);
   useLayoutEffect(() => {
-    context.renderAbstractNodes = setAbstractNodes;
+    tr.rO = setAbstractNodes;
     return () => {
-      context.renderAbstractNodes = undefined;
+      tr.rO = undefined;
     };
-  }, [context]);
+  }, [tr]);
   return useMemo(() => {
-    if (!abstractNodes) {
+    if (!ns) {
       return null;
     }
-    return abstractNodes.map(node => {
+    return ns.map(node => {
       const { View } = docConfigs[node.type];
-      return <View key={node.id} context={node} />;
+      return <View key={node.ut} tr={node} />;
     });
-  }, [abstractNodes, docConfigs]);
+  }, [ns, docConfigs]);
 }
 
 export function useAbstractNodeData<T extends AnyAbstractNode>(abstractNode: T) {
-  const [data, setData] = useState<T['data']>(abstractNode.data);
+  const [eo, setData] = useState<T['eo']>(abstractNode.eo);
   useLayoutEffect(() => {
-    abstractNode.render = setData;
+    abstractNode.r0 = setData;
     return () => {
-      abstractNode.render = undefined;
+      abstractNode.r0 = undefined;
     }
   }, [abstractNode]);
-  return data;
+  return eo;
 }
 
 export function useViewState<T extends AnyAbstractNode>(node: T, viewData: AnyAbstractNode['state']) {

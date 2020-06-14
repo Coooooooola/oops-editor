@@ -3,15 +3,15 @@ import { AbstractNode } from "../AbstractNode";
 import { AbstractEventType, SelectionSynchronizePayload, DocType, AbstractDoc, AbstractBrowserHooks } from "../types";
 import { useNextDocViews, useConnectAbstractNode, useViewState } from "./hooks";
 import { AbstractEvent, AbstractIntentTrace } from '../AbstractEvent';
-import { AbstractRange, AbstractPoint } from '../AbstractSelection';
+import { w5, bY } from '../AbstractSelection';
 
-function selectionSynchronize(event: AbstractEvent<SelectionSynchronizePayload, AbstractRange>) {
+function selectionSynchronize(event: AbstractEvent<SelectionSynchronizePayload, w5>) {
   return function bubbleDocSyncSelection() {
-    const selection = event.trace.selection;
-    if (selection && selection.anchorPoint && selection.focusPoint) {
-      event.returnValue = new AbstractRange(
-        selection.anchorPoint,
-        selection.focusPoint,
+    const selection = event.tv.selection;
+    if (selection && selection.pc && selection.yt) {
+      event.rT = new w5(
+        selection.pc,
+        selection.yt,
       );
     }
   };
@@ -19,7 +19,7 @@ function selectionSynchronize(event: AbstractEvent<SelectionSynchronizePayload, 
 
 function selectionRendering(event: AbstractEvent<any, AbstractIntentTrace['windowSelection']>) {
   return function bubbleSelectionRendering() {
-    const windowSelection = event.trace.windowSelection;
+    const windowSelection = event.tv.windowSelection;
     if (
       windowSelection &&
       windowSelection.anchorNode &&
@@ -27,23 +27,23 @@ function selectionRendering(event: AbstractEvent<any, AbstractIntentTrace['windo
       windowSelection.focusNode &&
       windowSelection.focusOffset != null
     ) {
-      event.returnValue = windowSelection;
+      event.rT = windowSelection;
     }
   };
 }
 
-export function DocView({ context }: { context: AbstractDoc }) {
-  const ref = useConnectAbstractNode<HTMLDivElement>(context);
-  return <div ref={ref}>{useNextDocViews(context)}</div>;
+export function DocView({ tr }: { tr: AbstractDoc }) {
+  const ref = useConnectAbstractNode<HTMLDivElement>(tr);
+  return <div ref={ref}>{useNextDocViews(tr)}</div>;
 }
 
-const browserHooks: AbstractBrowserHooks = {
-  [AbstractEventType.SelectionSynchronize]: selectionSynchronize,
-  [AbstractEventType.SelectionRendering]: selectionRendering,
+const w007O: AbstractBrowserHooks = {
+  [0]: selectionSynchronize,
+  [1]: selectionRendering,
 };
 
 export const DocConfig = {
   View: DocView,
   hooks: {},
-  browserHooks,
+  w007O,
 };
