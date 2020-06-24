@@ -87,11 +87,39 @@ const text3 = createAbstractText({
   },
 });
 
+const texts: any[] = [];
+const query = new URLSearchParams(document.location.search);
+const len = +(query.get('size') || 0) / 2;
+for (let i = 0; i < len; i++) {
+  texts.push(createAbstractText({
+    data: {
+      content: '0123456789',
+      style: {
+        color: 'red',
+        fontSize: 80,
+      },
+    },
+  }));
+  texts.push(createAbstractText({
+    data: {
+      content: '0123456789',
+      style: {
+        color: 'green',
+        fontSize: 70,
+      },
+    },
+  }));
+}
+if (query.get('log') !== 'true') {
+  (window.console as any)._log = window.console.log;
+  window.console.log = () => {};
+}
+
 const paragraph: AbstractParagraph = {
   type: DocType.Paragraph,
   id: randomId(),
   data: undefined,
-  abstractNodes: [text1, text2, text3],
+  abstractNodes: [text1, text2, text3, ...texts],
 };
 
 const defaultAbstractNode: AbstractDoc = {

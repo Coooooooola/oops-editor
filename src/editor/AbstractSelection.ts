@@ -40,10 +40,10 @@ export class AbstractRange {
         forward = false;
         break;
       case AbstractPosition.Contains:
-        forward = focus.offset === 0 ? true : false;
+        forward = focus.offset === 0;
         break;
       case AbstractPosition.ContainedBy:
-        forward = anchor.offset === 0 ? true : false;
+        forward = anchor.offset === 0;
         break;
       default:
         throw new Error('Disconnect.');
@@ -189,10 +189,10 @@ export class AbstractSelection {
         forward = false;
         break;
       case AbstractPosition.Contains:
-        forward = focusOffset === 0 ? true : false;
+        forward = focusOffset === 0;
         break;
       case AbstractPosition.ContainedBy:
-        forward = anchorOffset === 0 ? true : false;
+        forward = anchorOffset === 0;
         break;
       default:
         throw new Error();

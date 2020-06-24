@@ -421,10 +421,7 @@ function textFormatStyle(
   }
   const formatedData = payload.excludes.indexOf(this) !== -1 ? this.data : {
     content: formatContent,
-    style: {
-      ...style,
-      ...payload.style,
-    },
+    style: Object.assign({}, style, payload.style),
   };
   const formatedText = pushText(context, formatedData, this.parent, this);
   const rightText = rightContent ? pushText(context, { content: rightContent, style }, this.parent) : undefined;
