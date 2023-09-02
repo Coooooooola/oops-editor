@@ -112,7 +112,7 @@ for (let i = 0; i < len; i++) {
 }
 if (query.get('log') !== 'true') {
   (window.console as any)._log = window.console.log;
-  window.console.log = () => {};
+  // window.console.log = () => {};
 }
 
 const paragraph: AbstractParagraph = {

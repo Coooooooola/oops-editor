@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react';
-import { Editor } from './editor/Editor';
-import './App.css';
+import React, { useEffect, useState } from "react";
+import { Editor } from "./editor/Editor";
+import "./App.css";
 
 function App() {
   const [editor, setEditor] = useState<JSX.Element | null>(null);
@@ -10,7 +10,7 @@ function App() {
     }, 200);
   }, []);
 
-  return editor;
+  return <div style={{ padding: 10 }}>{editor}</div>;
 }
 
 export default App;

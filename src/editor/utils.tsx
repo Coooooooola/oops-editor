@@ -28,6 +28,7 @@ export function findAbstractNodeFromDOM(node: Node) {
 
 export function assert(condition: any, msg?: string): asserts condition {
   if (!condition) {
+    debugger
     throw new Error(msg || `assert: ${condition}`);
   }
 }

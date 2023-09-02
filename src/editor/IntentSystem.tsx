@@ -1,11 +1,31 @@
 import React, { ReactNode, useMemo, useEffect, forwardRef } from "react";
-import { AbstractSelection, AbstractRange } from "./AbstractSelection";
-import { isMoveForward, isMoveBackward, isExtendForward, isExtendBackward, isBold, isItalic, isDeleteBackward, isDeleteForward, isSplitBlock } from './hotkeys';
+import {
+  AbstractSelection,
+  AbstractRange,
+  AbstractPoint,
+} from "./AbstractSelection";
+import {
+  isMoveForward,
+  isMoveBackward,
+  isExtendForward,
+  isExtendBackward,
+  isBold,
+  isItalic,
+  isDeleteBackward,
+  isDeleteForward,
+  isSplitBlock,
+} from "./hotkeys";
 import { AbstractNode, AnyAbstractNode, abstractSplice } from "./AbstractNode";
-import { AbstractConfigs, AbstractEventType, SelectionMovePayload, TextQueryStylePayload, AbstractText } from "./types";
-import { $, AbstractHelper } from './AbstractHelper';
+import {
+  AbstractConfigs,
+  AbstractEventType,
+  SelectionMovePayload,
+  TextQueryStylePayload,
+  AbstractText,
+} from "./types";
+import { $, AbstractHelper } from "./AbstractHelper";
 import { assert } from "./utils";
-import styles from './IntentSystem.module.css';
+import styles from "./IntentSystem.module.css";
 import { AbstractEvent } from "./AbstractEvent";
 
 function createCaptureCallback(interestHooks: any) {
@@ -15,7 +35,7 @@ function createCaptureCallback(interestHooks: any) {
     event.context = currentContext;
     let bubble1: any;
     let bubble2: any;
-    const value = interestHooks[this.type]
+    const value = interestHooks[this.type];
     if (value) {
       const { hook, browserHook } = value;
       bubble1 = hook && hook.call(this, event);
@@ -41,15 +61,21 @@ class Context {
   constructor(
     private current: AnyAbstractNode,
     private event: AbstractEvent,
-    public parentContext?: Context,
+    public parentContext?: Context
   ) {}
 
   peek() {
-    return this.sliceNodes.length ? this.sliceNodes[this.sliceNodes.length - 1] : undefined;
+    return this.sliceNodes.length
+      ? this.sliceNodes[this.sliceNodes.length - 1]
+      : undefined;
   }
 
   push(node: AnyAbstractNode) {
     this.sliceNodes.push(node);
+  }
+
+  pop() {
+    return this.sliceNodes.pop();
   }
 
   replaced = false;
@@ -61,7 +87,10 @@ class Context {
       const { leftChildIndex: start, rightChildIndex: end } = this.event;
       if (start != null && end != null) {
         assert(start <= end);
-        abstractSplice(this.current, start, end - start + 1, this.sliceNodes);
+        const sn = this.event.forward
+          ? this.sliceNodes
+          : this.sliceNodes.reverse();
+        abstractSplice(this.current, start, end - start + 1, sn);
       }
     }
   }
@@ -90,44 +119,50 @@ export class IntentSystem {
     // this.continuousKeyDown += 1;
 
     if (isMoveForward(nativeEvent)) {
-      console.log('forward');
+      console.log("forward");
       abstractSelection.forward(false, 1, nativeEvent);
     } else if (isMoveBackward(nativeEvent)) {
-      console.log('backward');
+      console.log("backward");
       abstractSelection.backward(false, 1, nativeEvent);
     } else if (isExtendForward(nativeEvent)) {
-      console.log('extend forward');
+      console.log("extend forward");
       abstractSelection.forward(true, 1, nativeEvent);
     } else if (isExtendBackward(nativeEvent)) {
-      console.log('extend backward');
+      console.log("extend backward");
       abstractSelection.backward(true, 1, nativeEvent);
     } else if (isBold(nativeEvent) || isItalic(nativeEvent)) {
       const formatBold = isBold(nativeEvent);
       const formatItalic = isItalic(nativeEvent);
 
-      const keys: TextQueryStylePayload['keys'] = [];
+      const keys: TextQueryStylePayload["keys"] = [];
       if (formatBold) {
-        keys.push('fontWeight');
-        console.log('bold');
+        keys.push("fontWeight");
+        console.log("bold");
       }
       if (formatItalic) {
-        keys.push('fontStyle');
-        console.log('italic');
+        keys.push("fontStyle");
+        console.log("italic");
       }
 
       event.preventDefault();
       const { range } = this.abstractSelection;
       if (range) {
         const { anchor, focus, isForward } = range;
-        const result = helper.dispatchEvent<AbstractText['data']['style'], TextQueryStylePayload>({
-          type: AbstractEventType.TextQueryStyle,
-          payload: { keys },
-        }, {
-          forward: true,
-          point1: anchor.node,
-          point2: focus.node,
-          configs: this.configs,
-        });
+        const result = helper.dispatchEvent<
+          AbstractText["data"]["style"],
+          TextQueryStylePayload
+        >(
+          {
+            type: AbstractEventType.TextQueryStyle,
+            payload: { keys },
+          },
+          {
+            forward: true,
+            point1: anchor.node,
+            point2: focus.node,
+            configs: this.configs,
+          }
+        );
         if (result) {
           console.log(result);
           const boldBool = result.fontWeight === undefined;
@@ -151,20 +186,23 @@ export class IntentSystem {
             payload.style.fontWeight = boldBool ? 600 : undefined;
           }
           if (formatItalic) {
-            payload.style.fontStyle = italicBool ? 'italic' : undefined;
+            payload.style.fontStyle = italicBool ? "italic" : undefined;
           }
 
-          const nextRange: AbstractRange | undefined = helper.dispatchEvent({
-            type: AbstractEventType.TextFormatStyle,
-            payload,
-          }, {
-            forward: true,
-            range: range,
-            point1: leftNode,
-            point2: rightNode,
-            configs: this.configs,
-            createCaptureCallback,
-          });
+          const nextRange: AbstractRange | undefined = helper.dispatchEvent(
+            {
+              type: AbstractEventType.TextFormatStyle,
+              payload,
+            },
+            {
+              forward: true,
+              range: range,
+              point1: leftNode,
+              point2: rightNode,
+              configs: this.configs,
+              createCaptureCallback,
+            }
+          );
           assert(nextRange);
           Promise.resolve().then(() => {
             this.abstractSelection.updateRange(nextRange);
@@ -173,43 +211,95 @@ export class IntentSystem {
       }
     } else if (isDeleteBackward(nativeEvent) || isDeleteForward(nativeEvent)) {
       const deleteForward = !!isDeleteForward(nativeEvent);
-      console.log(deleteForward ? 'delete backward' : 'delete forward');
+      console.log(deleteForward ? "delete backward" : "delete forward");
       nativeEvent.preventDefault();
       const { range } = this.abstractSelection;
       if (range) {
         const { isForward, collapsed, anchor, focus } = range;
         let deleteRange: AbstractRange | undefined;
         if (collapsed) {
-          deleteRange = helper.dispatchEvent<AbstractRange, SelectionMovePayload>({
-            type: AbstractEventType.SelectionMove,
-            payload: { shift: true, forward: deleteForward, step: 1 },
-          }, {
-            range,
-            forward: isForward,
-            point1: anchor.node,
-            point2: focus.node,
-            configs: this.configs,
-          });
+          deleteRange = helper.dispatchEvent<
+            AbstractRange,
+            SelectionMovePayload
+          >(
+            {
+              type: AbstractEventType.SelectionMove,
+              payload: { shift: true, forward: deleteForward, step: 1 },
+            },
+            {
+              range,
+              forward: isForward,
+              point1: anchor.node,
+              point2: focus.node,
+              configs: this.configs,
+            }
+          );
         } else {
           deleteRange = range;
         }
 
         if (deleteRange && !deleteRange.collapsed) {
-          const abstractRange: AbstractRange = helper.dispatchEvent({
-            type: AbstractEventType.ContentReplace,
-            payload: {
-              key: '',
+          const abstractRange: AbstractRange = helper.dispatchEvent(
+            {
+              type: AbstractEventType.ContentReplace,
+              payload: {
+                key: "",
+                prevParagraph: null,
+              },
             },
-          }, {
-            range: deleteRange,
-            forward: true,
-            point1: deleteRange.anchor.node,
-            point2: deleteRange.focus.node,
-            configs,
-            originEvent: event,
-            createCaptureCallback,
-          }) as AbstractRange;
+            {
+              range: deleteRange,
+              forward: false,
+              point1: deleteRange.anchor.node,
+              point2: deleteRange.focus.node,
+              configs,
+              originEvent: event,
+              createCaptureCallback,
+            }
+          ) as AbstractRange;
           assert(abstractRange);
+          const rright = helper.dispatchEvent(
+            {
+              type: AbstractEventType.SelectionTryMove,
+              payload: {
+                step: 0,
+                forward: true,
+              },
+            },
+            {
+              initiator: abstractRange.focus.node,
+              point1: abstractRange.focus.node,
+              forward: true,
+              configs: configs,
+            }
+          ) as AbstractPoint;
+          if (rright) {
+            const fr = new AbstractRange(abstractRange.anchor, rright);
+            const f1: AbstractRange | undefined = helper.dispatchEvent(
+              {
+                type: AbstractEventType.TextFormatStyle,
+                payload: {
+                  style: {},
+                  excludes: [],
+                },
+              },
+              {
+                forward: true,
+                range: fr,
+                point1: fr.anchor.node,
+                point2: fr.focus.node,
+                configs: this.configs,
+                createCaptureCallback,
+              }
+            );
+            assert(f1);
+            console.log(f1)
+            const collapsedr = new AbstractRange(f1.anchor, f1.anchor);
+            Promise.resolve().then(() => {
+              this.abstractSelection.updateRange(collapsedr);
+            });
+            return;
+          }
           Promise.resolve().then(() => {
             this.abstractSelection.updateRange(abstractRange);
           });
@@ -219,44 +309,79 @@ export class IntentSystem {
       event.preventDefault();
       const { range } = abstractSelection;
       if (range) {
-        const { anchor, focus, isForward } = range;
-        helper.dispatchEvent({
-          type: AbstractEventType.TextEnter,
-          payload: undefined,
-        }, {
-          range,
-          forward: true,
-          point1: anchor.node,
-          point2: focus.node,
-          configs,
+        const { isForward, collapsed } = range;
+        let nextRange: AbstractRange;
+        if (!collapsed) {
+          nextRange = helper.dispatchEvent(
+            {
+              type: AbstractEventType.ContentReplace,
+              payload: {
+                key: "",
+              },
+            },
+            {
+              range: range,
+              forward: true,
+              point1: range.anchor.node,
+              point2: range.focus.node,
+              configs,
+              originEvent: event,
+              createCaptureCallback,
+            }
+          ) as AbstractRange;
+        } else {
+          nextRange = range;
+        }
+        const newRange = helper.dispatchEvent(
+          {
+            type: AbstractEventType.TextEnter,
+            payload: {
+              prevText: null,
+              splitedText: null,
+              splitedParagraph: null,
+            },
+          },
+          {
+            range: nextRange,
+            forward: true,
+            point1: nextRange.anchor.node,
+            point2: nextRange.focus.node,
+            configs,
+          }
+        ) as AbstractRange;
+        assert(newRange);
+        Promise.resolve().then(() => {
+          this.abstractSelection.updateRange(newRange);
         });
       }
     } else if (
-      !event.metaKey && (
-        event.keyCode === 32 ||
+      !event.metaKey &&
+      (event.keyCode === 32 ||
         (event.keyCode >= 48 && event.keyCode <= 90) ||
-        (event.keyCode >= 186 && event.keyCode <= 223)
-      )
+        (event.keyCode >= 186 && event.keyCode <= 223))
     ) {
       console.log(event.key);
       const { range } = abstractSelection;
       if (range) {
         const { anchor, focus, isForward } = range;
         event.preventDefault();
-        const abstractRange: AbstractRange = helper.dispatchEvent({
-          type: AbstractEventType.ContentReplace,
-          payload: {
-            key: event.key,
+        const abstractRange: AbstractRange = helper.dispatchEvent(
+          {
+            type: AbstractEventType.ContentReplace,
+            payload: {
+              key: event.key,
+            },
           },
-        }, {
-          range,
-          forward: true,
-          point1: anchor.node,
-          point2: focus.node,
-          configs,
-          originEvent: event,
-          createCaptureCallback,
-        }) as AbstractRange;
+          {
+            range,
+            forward: true,
+            point1: anchor.node,
+            point2: focus.node,
+            configs,
+            originEvent: event,
+            createCaptureCallback,
+          }
+        ) as AbstractRange;
         assert(abstractRange);
         Promise.resolve().then(() => {
           this.abstractSelection.updateRange(abstractRange);
@@ -288,17 +413,21 @@ function useIntentSystem(root: AnyAbstractNode, configs: AbstractConfigs) {
   }, [configs, root]);
 }
 
-export function UserIntention({ editable, root, configs, children }: IntentProps) {
-  const {
-    nextKeyDown,
-    nextKeyUp,
-    nextSelectionChange,
-  } = useIntentSystem(root, configs);
+export function UserIntention({
+  editable,
+  root,
+  configs,
+  children,
+}: IntentProps) {
+  const { nextKeyDown, nextKeyUp, nextSelectionChange } = useIntentSystem(
+    root,
+    configs
+  );
 
   useEffect(() => {
-    document.addEventListener('selectionchange', nextSelectionChange);
+    document.addEventListener("selectionchange", nextSelectionChange);
     return () => {
-      document.removeEventListener('selectionchange', nextSelectionChange);
+      document.removeEventListener("selectionchange", nextSelectionChange);
     };
   }, [nextSelectionChange]);
 

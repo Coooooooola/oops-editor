@@ -67,6 +67,7 @@ export function linkAbstractNode(root: AnyAbstractNode) {
 type NextData<T extends AbstractNode<DocType>> = T['data'] | ((prevData: T['data']) => T['data']) | undefined;
 
 export function abstractUpdate<T extends AbstractNode<DocType>>(writableNode: Writable<T>, nextData: NextData<T>) {
+  // @ts-ignore
   const finalNextData = typeof nextData === 'function' ? nextData(writableNode.data) as T['data'] : nextData;
   if (!isPartialShallowEqual(finalNextData, writableNode.data, true)) {
     writableNode.data = finalNextData;
@@ -76,27 +77,34 @@ export function abstractUpdate<T extends AbstractNode<DocType>>(writableNode: Wr
   }
 }
 
-export function abstractSplice(node: Writable<AnyAbstractNode>, start: number, deleteCount: number, items: Writable<AnyAbstractNode>[]) {
-  const { abstractNodes, renderAbstractNodes } = node;
+export function abstractSplice(node: Writable<AnyAbstractNode>, start: number, deleteCount: number, items: Writable<AnyAbstractNode>[], updateParent = false) {
+  if (!deleteCount && !items.length) {
+    return [];
+  }
+  const { abstractNodes = [], renderAbstractNodes } = node;
   assert(abstractNodes);
 
   if (
     deleteCount === items.length &&
     items.every((item, index) => item === abstractNodes[start + index])
   ) {
-    return;
+    return [];
   }
 
   const nextAbstractNodes = abstractNodes.slice() as typeof abstractNodes;
-  nextAbstractNodes.splice(start, deleteCount, ...items);
-  // for (const item of items) {
-  //   item.parent = node;
-  // }
+  const deleted = nextAbstractNodes.splice(start, deleteCount, ...items);
+  if (updateParent) {
+    for (const item of items) {
+      item.parent = node;
+    }
+  }
+  // @ts-ignore
   node.abstractNodes = nextAbstractNodes.length ? nextAbstractNodes : undefined;
 
   if (renderAbstractNodes) {
     renderAbstractNodes(node.abstractNodes);
   }
+  return deleted;
 }
 
 // export type AbstractData<T extends IDocNode> = Omit<T, 'type' | 'id' | 'childNodes'>;
