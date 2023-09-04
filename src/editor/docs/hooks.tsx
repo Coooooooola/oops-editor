@@ -2,13 +2,13 @@ import React, { useRef, useEffect, useContext, useState, useMemo, useLayoutEffec
 import { AbstractNode, AnyAbstractNode } from '../AbstractNode';
 import { documentContext } from './EditorDocument';
 import { DocType } from '../types';
+import { assert } from '../utils';
 
 export function useConnectAbstractNode<T extends Element>(abstractNode: AnyAbstractNode) {
   const ref = useRef<T>(null);
   useLayoutEffect(() => {
-    if (ref.current) {
-      (ref.current as any).__ABSTRACT__ = abstractNode;
-    }
+    assert(ref.current);
+    (ref.current as any).__ABSTRACT__ = abstractNode;
   }, [abstractNode]);
   return ref;
 }

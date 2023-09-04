@@ -10,7 +10,7 @@ function App() {
     }, 200);
   }, []);
 
-  return <div style={{ padding: 10 }}>{editor}</div>;
+  return <div style={{ margin: 30, border: '1px dashed gray' }}>{editor}</div>;
 }
 
 export default App;

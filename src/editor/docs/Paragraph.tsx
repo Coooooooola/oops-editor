@@ -28,14 +28,47 @@ function paragraphSyncSelection(
     payload.anchorAbstractNode === this ||
     payload.focusAbstractNode === this
   ) {
-    // TODO
+    const trace = event.trace.selection || {
+      anchorPoint: undefined,
+      focusPoint: undefined,
+    };
+    event.trace.selection = trace;
+
+    const div = this.state.ref.current;
+    assert(div);
+    if (payload.anchorNode === div) {
+      let node;
+      let len;
+      if (payload.anchorOffset === 0) {
+        node = this.abstractNodes[0];
+        len = 0;
+      } else {
+        node = this.abstractNodes[this.abstractNodes.length - 1];
+        len = node.data.content.length;
+      }
+      trace.anchorPoint = new AbstractPoint(node, len);
+    }
+    if (payload.focusNode === div) {
+      let node;
+      let len;
+      if (payload.focusOffset === 0) {
+        node = this.abstractNodes[0];
+        len = 0;
+      } else {
+        node = this.abstractNodes[this.abstractNodes.length - 1];
+        len = node.data.content.length;
+      }
+      trace.focusPoint = new AbstractPoint(node, len);
+    }
   }
 }
 
 export function ParagraphView({ context }: { context: AbstractParagraph }) {
-  const ref = useConnectAbstractNode<HTMLDivElement>(context);
   const data = useAbstractNodeData(context);
   const views = useNextDocViews(context);
+  const ref = useConnectAbstractNode<HTMLDivElement>(context);
+  const viewData = useMemo(() => ({ ref }), [ref]);
+  useViewState(context, viewData);
   return (
     <div ref={ref} style={{ textAlign: data && data.align }}>
       {views}

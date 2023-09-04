@@ -78,19 +78,41 @@ function selectionSynchronize(
     payload.anchorAbstractNode === this ||
     payload.focusAbstractNode === this
   ) {
-    const textNode = ref.current?.firstChild;
-    if (textNode) {
-      const trace = event.trace.selection || {
-        anchorPoint: undefined,
-        focusPoint: undefined,
-      };
-      event.trace.selection = trace;
-      const len = this.data.content.length;
-      if (payload.anchorNode === textNode) {
-        trace.anchorPoint = new AbstractPoint(this, Math.min(payload.anchorOffset, len));
+    const trace = event.trace.selection || {
+      anchorPoint: undefined,
+      focusPoint: undefined,
+    };
+    event.trace.selection = trace;
+
+    const span = ref.current;
+    assert(span);
+    const child = span?.firstChild;
+    const len = this.data.content.length;
+
+    if (payload.anchorNode === span) {
+      trace.anchorPoint = new AbstractPoint(
+        this,
+        payload.anchorOffset === 0 ? 0 : len
+      );
+    }
+    if (payload.focusNode === span) {
+      trace.focusPoint = new AbstractPoint(
+        this,
+        payload.anchorOffset === 0 ? 0 : len
+      );
+    }
+    if (child) {
+      if (payload.anchorNode === child) {
+        trace.anchorPoint = new AbstractPoint(
+          this,
+          len === 0 ? 0 : payload.anchorOffset
+        );
       }
-      if (payload.focusNode === textNode) {
-        trace.focusPoint = new AbstractPoint(this, Math.min(payload.focusOffset, len));
+      if (payload.focusNode === child) {
+        trace.focusPoint = new AbstractPoint(
+          this,
+          len === 0 ? 0 : payload.focusOffset
+        );
       }
     }
   }
@@ -104,21 +126,24 @@ function selectionRendering(
   const { range } = event;
   assert(range);
   if (range.anchor.node === this || range.focus.node === this) {
-    const textNode = ref.current?.firstChild;
-    if (textNode) {
-      const trace = event.trace.windowSelection || {
-        anchorNode: undefined,
-        anchorOffset: undefined,
-        focusNode: undefined,
-        focusOffset: undefined,
-      };
-      event.trace.windowSelection = trace;
+    const trace = event.trace.windowSelection || {
+      anchorNode: undefined,
+      anchorOffset: undefined,
+      focusNode: undefined,
+      focusOffset: undefined,
+    };
+    event.trace.windowSelection = trace;
+
+    const span = ref.current;
+    assert(span);
+    const node = this.data.content.length ? span.firstChild : span;
+    if (node) {
       if (range.anchor.node === this) {
-        trace.anchorNode = textNode;
+        trace.anchorNode = node;
         trace.anchorOffset = range.anchor.offset;
       }
       if (range.focus.node === this) {
-        trace.focusNode = textNode;
+        trace.focusNode = node;
         trace.focusOffset = range.focus.offset;
       }
     }
@@ -131,10 +156,13 @@ function _TextView({ context }: { context: AbstractText }) {
 
   const viewData = useMemo(() => ({ ref }), [ref]);
   useViewState(context, viewData);
+  const ct = useMemo(() => {
+    return content.length ? content.replace(/ /g, "\u00a0") : <br />;
+  }, [content]);
 
   return (
     <span ref={ref} style={style}>
-      {content.length ? content.replace(/ /g, "\u00a0") : '\u200b'}
+      {ct}
     </span>
   );
 }
@@ -265,7 +293,6 @@ function selectionMove(
       }
     }
 
-    console.log(finalAnchor, finalFocus);
     event.returnValue = new AbstractRange(finalAnchor, finalFocus);
   }
 }
@@ -294,7 +321,6 @@ function selectionTryMove(
 }
 
 function contentReplace(this: AbstractText, event: AbstractEvent) {
-  console.log(this.data.content)
   assert(event.range);
   const { anchor, focus, isForward } = event.range;
   const anchorBool = anchor.node === this;
