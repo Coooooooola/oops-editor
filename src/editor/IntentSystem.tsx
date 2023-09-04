@@ -374,7 +374,7 @@ export class IntentSystem {
           },
           {
             range,
-            forward: true,
+            forward: false,
             point1: anchor.node,
             point2: focus.node,
             configs,
